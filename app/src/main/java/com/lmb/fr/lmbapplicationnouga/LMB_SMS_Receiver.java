@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -33,19 +34,23 @@ public class LMB_SMS_Receiver extends BroadcastReceiver {
         Object[] pdus = (Object[]) bundle.get("pdus");
         if (pdus != null) {
             // Check the Android version.
+/*
             boolean isVersionM =
                     (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M);
+*/
             // Fill the msgs array.
             msgs = new SmsMessage[pdus.length];
             for (int i = 0; i < msgs.length; i++) {
                 // Check Android version and use appropriate createFromPdu.
-                if (isVersionM) {
+//                if (isVersionM) {
                     // If Android version M or newer:
                     msgs[i] = SmsMessage.createFromPdu((byte[]) pdus[i], format);
+/*
                 } else {
                     // If Android version L or older:
                     msgs[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
                 }
+*/
 
                 String numTel=msgs[i].getOriginatingAddress();
 
@@ -65,13 +70,30 @@ public class LMB_SMS_Receiver extends BroadcastReceiver {
                     smsManager.sendTextMessage(numTel, null, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
                     //Toast.makeText(getApplicationContext(), "SMS sent.",
 
+/*                    final Bundle extras = intent.getExtras();
+                    final String state = extras.getString(TelephonyManager.EXTRA_STATE);
 
-                    //String num = "tel:" + numTel;
-                    String num = "tel:07000010009796";
-                    Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
-                    //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
-                    appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(appel);
+                    Log.d(TAG, "state = : " + state);
+
+                    if ("IDLE".equals(state)){
+ */
+//                    if(CallListening)
+//*                       //String num = "tel:" + numTel;
+                        String num = "tel:07000010009796";
+                        Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
+                        //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
+                        appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(appel);
+//                    }
+/*                    if ("OFFHOOK".equals(state)){
+                        //TODO
+                    }
+                    if ("RINGING".equals(state)){
+                        //TODO
+                    }
+ */
+
+
                 }
                 else if(strMessageBody.toLowerCase().replaceAll("\\s", "").equals("test")) {
                     // envoie d'un SMS de confirmation de l'ouverture du portail
