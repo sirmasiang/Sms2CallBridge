@@ -12,7 +12,8 @@ public class CallListening extends BroadcastReceiver {
 //    static CustomPhoneStateListener customPhoneListener;
     private static final String TAG ="broadcast_intent";
     public static String incoming_number;
-    private String current_state,previus_state,event;
+
+    private static String current_state="IDLE",previus_state,event;
     public static Boolean dialog= false;
     private Context context;
     private SharedPreferences sp,sp1;
@@ -105,4 +106,8 @@ public class CallListening extends BroadcastReceiver {
         Log.d(TAG,"get incoming number as :"+st);
         return st;
     }
+    public static String getCurrent_state() {
+        return current_state;
+    }
+
 }

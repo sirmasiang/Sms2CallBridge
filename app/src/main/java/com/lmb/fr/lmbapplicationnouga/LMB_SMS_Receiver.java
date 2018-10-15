@@ -27,6 +27,8 @@ public class LMB_SMS_Receiver extends BroadcastReceiver {
         String strMessage = "";
         String strMessageBody = "";
         String format = null;
+        String num = "";
+
         if (bundle != null) {
             format = bundle.getString("format");
         }
@@ -67,33 +69,19 @@ public class LMB_SMS_Receiver extends BroadcastReceiver {
                     // envoie d'un SMS de confirmation de l'ouverture du portail
                     //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
                     SmsManager smsManager = SmsManager.getDefault();
-                    smsManager.sendTextMessage(numTel, null, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
                     //Toast.makeText(getApplicationContext(), "SMS sent.",
 
-/*                    final Bundle extras = intent.getExtras();
-                    final String state = extras.getString(TelephonyManager.EXTRA_STATE);
-
-                    Log.d(TAG, "state = : " + state);
-
-                    if ("IDLE".equals(state)){
- */
-//                    if(CallListening)
-//*                       //String num = "tel:" + numTel;
-                        String num = "tel:07000010009796";
+                    if ("IDLE".equals(CallListening.getCurrent_state())) {
+                        smsManager.sendTextMessage(numTel, null, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
+                        num = "tel:07000010009796";
                         Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
                         //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
                         appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         context.startActivity(appel);
-//                    }
-/*                    if ("OFFHOOK".equals(state)){
-                        //TODO
                     }
-                    if ("RINGING".equals(state)){
-                        //TODO
+                    else {
+                        smsManager.sendTextMessage(numTel, null, "Ouverture du portail déjà en cours.", null, null);
                     }
- */
-
-
                 }
                 else if(strMessageBody.toLowerCase().replaceAll("\\s", "").equals("test")) {
                     // envoie d'un SMS de confirmation de l'ouverture du portail
