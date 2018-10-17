@@ -10,7 +10,7 @@ import android.util.Log;
 
 public class CallListening extends BroadcastReceiver {
 //    static CustomPhoneStateListener customPhoneListener;
-    private static final String TAG ="broadcast_intent";
+    private static final String TAG ="CallListening";
     public static String incoming_number;
 
     private static String current_state="IDLE",previus_state,event;

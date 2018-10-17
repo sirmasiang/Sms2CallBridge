@@ -11,6 +11,7 @@ import android.telephony.SmsMessage;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
+import android.provider.ContactsContract;
 
 public class LMB_SMS_Receiver extends BroadcastReceiver {
     private static final String TAG = "LmbSmsReceiver";
