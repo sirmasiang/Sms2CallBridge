@@ -1,5 +1,4 @@
 package com.lmb.fr.lmbapplicationnouga;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -7,6 +6,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import static com.lmb.fr.lmbapplicationnouga.LMBService.*;
 
 public class CallListening extends BroadcastReceiver {
 //    static CustomPhoneStateListener customPhoneListener;
@@ -54,6 +54,9 @@ public class CallListening extends BroadcastReceiver {
                 }
                 break;
             case "IDLE":
+                /* Reset the global variable here */
+                LMBService.CallOnGoing = false;
+
                 Log.d(TAG, "State : idle and  incoming_number : " + incoming_number);
                 if((previus_state.equals("OFFHOOK")) || (previus_state.equals("SECOND_CALL_RINGING")) || (previus_state.equals("IDLE"))){
                     current_state="IDLE";

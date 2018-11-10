@@ -1,5 +1,7 @@
 package com.lmb.fr.lmbapplicationnouga;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -7,14 +9,24 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.annotation.RequiresApi;
+import android.support.v4.app.NotificationCompat;
 import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
 import android.util.Log;
 import android.widget.Toast;
 
 public class LMBService extends Service {
+    private static final String TAG ="LMB_Application";
+    private static final String CHANNEL_ID = "LMBChannelID";
+    public static boolean CallOnGoing = false;
+
+    public void setCallOnGoing(boolean callOnGoing) {
+        this.CallOnGoing = callOnGoing;
+    }
 
     private final BroadcastReceiver LMB_SMS_Receiver = new BroadcastReceiver() {
         private static final String TAG = "LmbSmsReceiver";
@@ -75,7 +87,7 @@ public class LMBService extends Service {
                         SmsManager smsManager = SmsManager.getDefault();
                         //Toast.makeText(getApplicationContext(), "SMS sent.",
 
-                        if ("IDLE".equals(CallListening.getCurrent_state())) {
+                        if ("IDLE".equals(CallListening.getCurrent_state())&& CallOnGoing == false) {
                             smsManager.sendTextMessage(numTel, null, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
                             num = "tel:07000010009796";
                             Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
@@ -91,9 +103,29 @@ public class LMBService extends Service {
                         SmsManager smsManager = SmsManager.getDefault();
                         smsManager.sendTextMessage(numTel, null, "Test de l'application LMB", null, null);
                         //Toast.makeText(getApplicationContext(), "SMS sent.",
+                    } else  if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("appel")) {
+
+                        // envoie d'un SMS de confirmation de l'ouverture du portail
+                        //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
+                        SmsManager smsManager = SmsManager.getDefault();
+                        //Toast.makeText(getApplicationContext(), "SMS sent.",
+
+                        if (("IDLE".equals(CallListening.getCurrent_state()))&& CallOnGoing == false) {
+                            // Set the global variable here
+                            CallOnGoing = true;
+
+                            smsManager.sendTextMessage(numTel, null, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
+                            num = "tel:" + numTel;
+                            Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
+                            //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
+                            appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            context.startActivity(appel);
+                        } else {
+                            smsManager.sendTextMessage(numTel, null, "Ouverture du portail déjà en cours.", null, null);
+                        }
                     }
 
-                }
+                    }
             }
         }
     };
@@ -107,6 +139,7 @@ public class LMBService extends Service {
         super.onCreate();
         IntentFilter filter = new IntentFilter();
         filter.addAction("android.provider.Telephony.SMS_RECEIVED");
+        Log.d(TAG,"LMBService - onCreate");
         registerReceiver(LMB_SMS_Receiver,filter);
     }
 
@@ -139,10 +172,32 @@ public class LMBService extends Service {
      * constants associated with the {@link #START_CONTINUATION_MASK} bits.
      * @see #stopSelfResult(int)
      */
+    //@RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Toast.makeText(this, "LMB service started", Toast.LENGTH_LONG).show();
-        return super.onStartCommand(intent, flags, startId);
+        Log.d(TAG,"LMBService - onStartCommand");
+       // this.startForegroundService();
+        super.onStartCommand(intent, flags, startId);
+        //return super.onStartCommand(intent, flags, startId);
+
+        String input = intent.getStringExtra("LMBService");
+
+        Intent notificationIntent = new Intent(this, LMB_Application.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,
+                0, notificationIntent, 0);
+
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("LMB Service")
+                .setContentText(input)
+                .setSmallIcon(R.drawable.ic_android)
+                .setContentIntent(pendingIntent)
+                .build();
+
+        startForeground(1, notification);
+
+        return START_STICKY;
+
     }
 
     /**
@@ -154,11 +209,21 @@ public class LMBService extends Service {
     @Override
     public void onDestroy() {
         Toast.makeText(this, "LMB service stopped", Toast.LENGTH_LONG).show();
+        Log.d(TAG,"LMBService - onDestroy");
+
         unregisterReceiver(LMB_SMS_Receiver);
         super.onDestroy();
+        Intent broadcastIntent = new Intent("RestartLMBService");
+        sendBroadcast(broadcastIntent);
+
     }
 
     public LMBService() {
+    }
+
+    public LMBService(Context applicationContext) {
+        super();
+        Log.d(TAG, "LMBService - here I am!");
     }
 
     @Override

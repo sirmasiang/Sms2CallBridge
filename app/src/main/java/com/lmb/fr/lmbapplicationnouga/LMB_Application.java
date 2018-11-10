@@ -1,8 +1,11 @@
 package com.lmb.fr.lmbapplicationnouga;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.PersistableBundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -40,13 +43,25 @@ public class LMB_Application extends Activity {
 
     @Override
     protected void onDestroy() {
-        Log.d(TAG,"LMB Application - onDestroy");
+        Log.d(TAG,"LMB Application - onDestroy and stop service");
+        stopService(new Intent(getBaseContext(), LMBService.class));
         super.onDestroy();
     }
 
     public void startService(View view) {
         Log.d(TAG,"LMB Application - startService");
-        startService(new Intent(getBaseContext(), LMBService.class));
+        LMBService mLMBService = new LMBService();
+
+        //String input = editTextInput.getText().toString();
+        String input = "Hello World";
+
+        Intent serviceIntent = new Intent(this, LMBService.class);
+        serviceIntent.putExtra("LMBService", input);
+
+        if(!isMyServiceRunning(mLMBService.getClass())) {
+            //startService(new Intent(getBaseContext(), LMBService.class));
+            ContextCompat.startForegroundService(this, serviceIntent);
+        }
     }
 
     // Method to stop the service
@@ -55,5 +70,15 @@ public class LMB_Application extends Activity {
         stopService(new Intent(getBaseContext(), LMBService.class));
     }
 
-
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                Log.i ("isMyServiceRunning?", true+"");
+                return true;
+            }
+        }
+        Log.i ("isMyServiceRunning?", false+"");
+        return false;
+    }
 }
