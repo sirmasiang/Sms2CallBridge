@@ -22,6 +22,7 @@ import android.widget.Toast;
 public class LMBService extends Service {
     private static final String TAG ="LMB_Application";
     private static final String CHANNEL_ID = "LMBChannelID";
+    private String PortalPhoneNumber = "";
     public static boolean CallOnGoing = false;
 
     public void setCallOnGoing(boolean callOnGoing) {
@@ -89,7 +90,9 @@ public class LMBService extends Service {
 
                         if ("IDLE".equals(CallListening.getCurrent_state())&& CallOnGoing == false) {
                             smsManager.sendTextMessage(numTel, null, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
-                            num = "tel:07000010009796";
+                            //num = "tel:07000010009796";
+                            num = "tel:"+PortalPhoneNumber;
+
                             Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
                             //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
                             appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -182,6 +185,7 @@ public class LMBService extends Service {
         //return super.onStartCommand(intent, flags, startId);
 
         String input = intent.getStringExtra("LMBService");
+        PortalPhoneNumber = input;
 
         Intent notificationIntent = new Intent(this, LMB_Application.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
@@ -189,7 +193,7 @@ public class LMBService extends Service {
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("LMB Service")
-                .setContentText(input)
+                .setContentText("Portal number: "+input)
                 .setSmallIcon(R.drawable.ic_android)
                 .setContentIntent(pendingIntent)
                 .build();
@@ -213,8 +217,8 @@ public class LMBService extends Service {
 
         unregisterReceiver(LMB_SMS_Receiver);
         super.onDestroy();
-        Intent broadcastIntent = new Intent("RestartLMBService");
-        sendBroadcast(broadcastIntent);
+        //Intent broadcastIntent = new Intent("RestartLMBService");
+        //sendBroadcast(broadcastIntent);
 
     }
 

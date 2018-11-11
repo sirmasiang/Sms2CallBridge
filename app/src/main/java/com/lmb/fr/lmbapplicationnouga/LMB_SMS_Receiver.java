@@ -15,6 +15,7 @@ import android.provider.ContactsContract;
 
 public class LMB_SMS_Receiver extends BroadcastReceiver {
     private static final String TAG = "LmbSmsReceiver";
+    private String PhoneNumber = "";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -29,6 +30,8 @@ public class LMB_SMS_Receiver extends BroadcastReceiver {
         String strMessageBody = "";
         String format = null;
         String num = "";
+        PhoneNumber = intent.getStringExtra("LMBService");
+        ;
 
         if (bundle != null) {
             format = bundle.getString("format");
@@ -74,8 +77,11 @@ public class LMB_SMS_Receiver extends BroadcastReceiver {
 
                     if ("IDLE".equals(CallListening.getCurrent_state())) {
                         smsManager.sendTextMessage(numTel, null, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
-                        num = "tel:07000010009796";
+                        //num = "tel:07000010009796";
+                        //num = "tel:07000010009796";
+                        num = "tel:"+PhoneNumber;
                         Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
+                        //num = "tel:07000010009796";
                         //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
                         appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         context.startActivity(appel);

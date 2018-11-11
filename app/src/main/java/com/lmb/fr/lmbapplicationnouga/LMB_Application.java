@@ -10,15 +10,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 
 public class LMB_Application extends Activity {
     private static final String TAG ="LMB_Application";
+    private EditText PhoneNumer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lmb__application);
         Log.d(TAG,"LMB Application - onCreate");
+        PhoneNumer = findViewById(R.id.PortalPhoneNumber);
     }
 
     /**
@@ -53,7 +56,8 @@ public class LMB_Application extends Activity {
         LMBService mLMBService = new LMBService();
 
         //String input = editTextInput.getText().toString();
-        String input = "Hello World";
+        //String input = "Hello World";
+        String input = PhoneNumer.getText().toString();
 
         Intent serviceIntent = new Intent(this, LMBService.class);
         serviceIntent.putExtra("LMBService", input);

@@ -8,7 +8,7 @@
 
     <Button
         android:id="@+id/button"
-        android:layout_width="127dp"
+        android:layout_width="225dp"
         android:layout_height="48dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
@@ -25,23 +25,28 @@
         android:id="@+id/button2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="44dp"
+        android:layout_marginBottom="68dp"
         android:onClick="stopService"
         android:text="@string/stop_service"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.501"
         app:layout_constraintStart_toStartOf="parent" />
 
     <EditText
         android:id="@+id/PortalPhoneNumber"
         android:layout_width="302dp"
-        android:layout_height="wrap_content"
+        android:layout_height="39dp"
+        android:layout_marginEnd="41dp"
+        android:layout_marginStart="41dp"
         android:ems="10"
+        android:hint="@string/InputPhoneNumber"
         android:inputType="phone"
-        android:text="@string/InputPhoneNumber"
-        tools:layout_editor_absoluteX="41dp"
-        tools:layout_editor_absoluteY="260dp" />
+        app:layout_constraintBottom_toTopOf="@+id/button2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button"
+        app:layout_constraintVertical_bias="0.136" />
 
 </android.support.constraint.ConstraintLayout>
