@@ -54,10 +54,12 @@ public class LMB_Application extends Activity {
     public void startService(View view) {
         Log.d(TAG,"LMB Application - startService");
         LMBService mLMBService = new LMBService();
+        Globals g = Globals.getInstance();
 
         //String input = editTextInput.getText().toString();
         //String input = "Hello World";
         String input = PhoneNumer.getText().toString();
+        g.setData(input);
 
         Intent serviceIntent = new Intent(this, LMBService.class);
         serviceIntent.putExtra("LMBService", input);

@@ -105,6 +105,7 @@ public class LMBService extends Service {
                         //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
                         SmsManager smsManager = SmsManager.getDefault();
                         smsManager.sendTextMessage(numTel, null, "Test de l'application LMB", null, null);
+                        smsManager.sendTextMessage(numTel, null, "le numero du portail est le: " +PortalPhoneNumber, null, null);
                         //Toast.makeText(getApplicationContext(), "SMS sent.",
                     } else  if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("appel")) {
 
@@ -183,9 +184,11 @@ public class LMBService extends Service {
        // this.startForegroundService();
         super.onStartCommand(intent, flags, startId);
         //return super.onStartCommand(intent, flags, startId);
+        Globals g = Globals.getInstance();
 
         String input = intent.getStringExtra("LMBService");
-        PortalPhoneNumber = input;
+        //PortalPhoneNumber = input;
+        PortalPhoneNumber = g.getData();
 
         Intent notificationIntent = new Intent(this, LMB_Application.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
@@ -217,8 +220,10 @@ public class LMBService extends Service {
 
         unregisterReceiver(LMB_SMS_Receiver);
         super.onDestroy();
-        //Intent broadcastIntent = new Intent("RestartLMBService");
-        //sendBroadcast(broadcastIntent);
+
+        // To stop the automatic service start, comment following two lines, build and flash.
+        Intent broadcastIntent = new Intent("RestartLMBService");
+        sendBroadcast(broadcastIntent);
 
     }
 
