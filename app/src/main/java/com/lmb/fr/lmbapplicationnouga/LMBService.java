@@ -100,6 +100,22 @@ public class LMBService extends Service {
                         } else {
                             smsManager.sendTextMessage(numTel, null, "Ouverture du portail déjà en cours.", null, null);
                         }
+
+                    } else if (strMessageBody.toLowerCase().contains("settel")) {
+                        num = strMessageBody.toLowerCase().substring(7);
+                        PortalPhoneNumber = num;
+                        SmsManager smsManager = SmsManager.getDefault();
+                        smsManager.sendTextMessage(numTel, null, "le nouveau numero du portail est le: " +num, null, null);
+
+                    } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("help")) {
+                        // envoie d'un SMS d'aide sur les differentes commandes possible
+                        SmsManager smsManager = SmsManager.getDefault();
+                        smsManager.sendTextMessage(numTel, null, "Texte d'aide:\n" +
+                                "settel <numero>\n" +
+                                "test\n" +
+                                "ouvrir\n" +
+                                "appel", null, null);
+
                     } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("test")) {
                         // envoie d'un SMS de confirmation de l'ouverture du portail
                         //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
@@ -107,6 +123,7 @@ public class LMBService extends Service {
                         smsManager.sendTextMessage(numTel, null, "Test de l'application LMB", null, null);
                         smsManager.sendTextMessage(numTel, null, "le numero du portail est le: " +PortalPhoneNumber, null, null);
                         //Toast.makeText(getApplicationContext(), "SMS sent.",
+
                     } else  if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("appel")) {
 
                         // envoie d'un SMS de confirmation de l'ouverture du portail
@@ -129,7 +146,7 @@ public class LMBService extends Service {
                         }
                     }
 
-                    }
+                }
             }
         }
     };
