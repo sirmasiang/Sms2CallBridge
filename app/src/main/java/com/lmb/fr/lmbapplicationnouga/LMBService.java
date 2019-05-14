@@ -120,8 +120,8 @@ public class LMBService extends Service {
                         // envoie d'un SMS de confirmation de l'ouverture du portail
                         //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
                         SmsManager smsManager = SmsManager.getDefault();
-                        smsManager.sendTextMessage(numTel, null, "Test de l'application LMB", null, null);
-                        smsManager.sendTextMessage(numTel, null, "le numero du portail est le: " +PortalPhoneNumber, null, null);
+                        smsManager.sendTextMessage(numTel, null, "Test de l'application LMB\n" +
+                                "le numero du portail est le: " +PortalPhoneNumber, null, null);
                         //Toast.makeText(getApplicationContext(), "SMS sent.",
 
                     } else  if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("appel")) {
@@ -135,14 +135,14 @@ public class LMBService extends Service {
                             // Set the global variable here
                             CallOnGoing = true;
 
-                            smsManager.sendTextMessage(numTel, null, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
+                            smsManager.sendTextMessage(numTel, null, "Appel de votre mobile en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
                             num = "tel:" + numTel;
                             Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
                             //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
                             appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                             context.startActivity(appel);
                         } else {
-                            smsManager.sendTextMessage(numTel, null, "Ouverture du portail déjà en cours.", null, null);
+                            smsManager.sendTextMessage(numTel, null, "Appel de votre mobile déjà en cours.", null, null);
                         }
                     }
 
