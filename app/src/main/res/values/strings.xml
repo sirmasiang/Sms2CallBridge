@@ -3,4 +3,5 @@
     <string name="start_service">Start Service</string>
     <string name="stop_service">Stop Service</string>
     <string name="InputPhoneNumber">Input the portal phone number here</string>
+    <string name ="InputGroupName">Input the group here</string>
 </resources>
