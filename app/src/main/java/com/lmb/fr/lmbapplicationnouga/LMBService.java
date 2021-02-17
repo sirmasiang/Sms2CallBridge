@@ -83,77 +83,83 @@ public class LMBService extends Service {
                     Log.d(TAG, "onReceive: " + strMessage);
                     Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
 
-                    if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("ouvrir") ) {
-                        // envoie d'un SMS de confirmation de l'ouverture du portail
-                        //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
-                        SmsManager smsManager = SmsManager.getDefault();
-                        //Toast.makeText(getApplicationContext(), "SMS sent.",
+                    if (GroupName.length() == 0) {
 
-                        if ("IDLE".equals(CallListening.getCurrent_state())&& CallOnGoing == false) {
-                            smsManager.sendTextMessage(numTel, null, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
-                            //num = "tel:07000010009796";
-                            num = "tel:"+PortalPhoneNumber;
+                        if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("ouvrir")) {
+                            // envoie d'un SMS de confirmation de l'ouverture du portail
+                            //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
+                            SmsManager smsManager = SmsManager.getDefault();
+                            //Toast.makeText(getApplicationContext(), "SMS sent.",
 
-                            Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
-                            //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
-                            appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            context.startActivity(appel);
-                        } else {
-                            smsManager.sendTextMessage(numTel, null, "Ouverture du portail déjà en cours.", null, null);
+                            if ("IDLE".equals(CallListening.getCurrent_state()) && CallOnGoing == false) {
+                                smsManager.sendTextMessage(numTel, null, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
+                                //num = "tel:07000010009796";
+                                num = "tel:" + PortalPhoneNumber;
+
+                                Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
+                                //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
+                                appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                context.startActivity(appel);
+                            } else {
+                                smsManager.sendTextMessage(numTel, null, "Ouverture du portail déjà en cours.", null, null);
+                            }
+
                         }
-
-                    }
 
                    /* else if (GroupName !=""){
                         //faire le test d'appartenance
                         Toast.makeText(context, "C'est bien",Toast.LENGTH_SHORT).show();
                     }*/
 
-                    if (strMessageBody.toLowerCase().contains("settel")) {
-                        num = strMessageBody.toLowerCase().substring(7);
-                        PortalPhoneNumber = num;
-                        SmsManager smsManager = SmsManager.getDefault();
-                        smsManager.sendTextMessage(numTel, null, "le nouveau numero du portail est le: " +num, null, null);
+                        if (strMessageBody.toLowerCase().contains("settel")) {
+                            num = strMessageBody.toLowerCase().substring(7);
+                            PortalPhoneNumber = num;
+                            SmsManager smsManager = SmsManager.getDefault();
+                            smsManager.sendTextMessage(numTel, null, "le nouveau numero du portail est le: " + num, null, null);
 
-                    } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("help")) {
-                        // envoie d'un SMS d'aide sur les differentes commandes possible
-                        SmsManager smsManager = SmsManager.getDefault();
-                        smsManager.sendTextMessage(numTel, null, "Texte d'aide:\n" +
-                                "settel <numero>\n" +
-                                "test\n" +
-                                "ouvrir\n" +
-                                "appel", null, null);
+                        } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("help")) {
+                            // envoie d'un SMS d'aide sur les differentes commandes possible
+                            SmsManager smsManager = SmsManager.getDefault();
+                            smsManager.sendTextMessage(numTel, null, "Texte d'aide:\n" +
+                                    "settel <numero>\n" +
+                                    "test\n" +
+                                    "ouvrir\n" +
+                                    "appel", null, null);
 
-                    } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("test")) {
-                        // envoie d'un SMS de confirmation de l'ouverture du portail
-                        //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
-                        SmsManager smsManager = SmsManager.getDefault();
-                        smsManager.sendTextMessage(numTel, null, "Test de l'application LMB\n" +
-                                "le numero du portail est le: " +PortalPhoneNumber + ", le nom du groupe est : " +GroupName, null, null);
-                        //Toast.makeText(getApplicationContext(), "SMS sent.",
+                        } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("test")) {
+                            // envoie d'un SMS de confirmation de l'ouverture du portail
+                            //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
+                            SmsManager smsManager = SmsManager.getDefault();
+                            smsManager.sendTextMessage(numTel, null, "Test de l'application LMB\n" +
+                                    "le numero du portail est le: " + PortalPhoneNumber + ", le nom du groupe est : " + GroupName, null, null);
+                            //Toast.makeText(getApplicationContext(), "SMS sent.",
 
-                    } else  if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("appel")) {
+                        } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("appel")) {
 
-                        // envoie d'un SMS de confirmation de l'ouverture du portail
-                        //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
-                        SmsManager smsManager = SmsManager.getDefault();
-                        //Toast.makeText(getApplicationContext(), "SMS sent.",
+                            // envoie d'un SMS de confirmation de l'ouverture du portail
+                            //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
+                            SmsManager smsManager = SmsManager.getDefault();
+                            //Toast.makeText(getApplicationContext(), "SMS sent.",
 
-                        if (("IDLE".equals(CallListening.getCurrent_state()))&& CallOnGoing == false) {
-                            // Set the global variable here
-                            CallOnGoing = true;
+                            if (("IDLE".equals(CallListening.getCurrent_state())) && CallOnGoing == false) {
+                                // Set the global variable here
+                                CallOnGoing = true;
 
-                            smsManager.sendTextMessage(numTel, null, "Appel de votre mobile en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
-                            num = "tel:" + numTel;
-                            Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
-                            //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
-                            appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            context.startActivity(appel);
-                        } else {
-                            smsManager.sendTextMessage(numTel, null, "Appel de votre mobile déjà en cours.", null, null);
+                                smsManager.sendTextMessage(numTel, null, "Appel de votre mobile en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
+                                num = "tel:" + numTel;
+                                Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
+                                //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
+                                appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                context.startActivity(appel);
+                            } else {
+                                smsManager.sendTextMessage(numTel, null, "Appel de votre mobile déjà en cours.", null, null);
+                            }
                         }
-                    }
 
+                    }
+                    else{
+                        Toast.makeText(context, "C'est bien",Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
         }
