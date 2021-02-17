@@ -5,6 +5,7 @@ public class Globals{
 
     // Global variable
     private String PhoneNumber;
+    private String GroupName;
 
     // Restrict the constructor from being instantiated
     private Globals(){}
@@ -15,6 +16,15 @@ public class Globals{
     public String getData(){
         return this.PhoneNumber;
     }
+
+    public void setDatag(String g){
+        this.GroupName=g;
+    }
+
+    public String getDatag(){
+        return this.GroupName;
+    }
+
 
     public static synchronized Globals getInstance(){
         if(instance==null){

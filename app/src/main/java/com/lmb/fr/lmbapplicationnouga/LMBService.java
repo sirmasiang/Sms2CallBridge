@@ -23,6 +23,7 @@ public class LMBService extends Service {
     private static final String TAG ="LMB_Application";
     private static final String CHANNEL_ID = "LMBChannelID";
     private String PortalPhoneNumber = "";
+    private String GroupName = "";
     public static boolean CallOnGoing = false;
 
     public void setCallOnGoing(boolean callOnGoing) {
@@ -82,7 +83,7 @@ public class LMBService extends Service {
                     Log.d(TAG, "onReceive: " + strMessage);
                     Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
 
-                    if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("ouvrir")) {
+                    if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("ouvrir") ) {
                         // envoie d'un SMS de confirmation de l'ouverture du portail
                         //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
                         SmsManager smsManager = SmsManager.getDefault();
@@ -101,7 +102,14 @@ public class LMBService extends Service {
                             smsManager.sendTextMessage(numTel, null, "Ouverture du portail déjà en cours.", null, null);
                         }
 
-                    } else if (strMessageBody.toLowerCase().contains("settel")) {
+                    }
+
+                   /* else if (GroupName !=""){
+                        //faire le test d'appartenance
+                        Toast.makeText(context, "C'est bien",Toast.LENGTH_SHORT).show();
+                    }*/
+
+                    if (strMessageBody.toLowerCase().contains("settel")) {
                         num = strMessageBody.toLowerCase().substring(7);
                         PortalPhoneNumber = num;
                         SmsManager smsManager = SmsManager.getDefault();
@@ -121,7 +129,7 @@ public class LMBService extends Service {
                         //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
                         SmsManager smsManager = SmsManager.getDefault();
                         smsManager.sendTextMessage(numTel, null, "Test de l'application LMB\n" +
-                                "le numero du portail est le: " +PortalPhoneNumber, null, null);
+                                "le numero du portail est le: " +PortalPhoneNumber + ", le nom du groupe est : " +GroupName, null, null);
                         //Toast.makeText(getApplicationContext(), "SMS sent.",
 
                     } else  if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("appel")) {
@@ -202,10 +210,14 @@ public class LMBService extends Service {
         super.onStartCommand(intent, flags, startId);
         //return super.onStartCommand(intent, flags, startId);
         Globals g = Globals.getInstance();
+        Globals globals = Globals.getInstance();
 
+
+        String inputgroup = intent.getStringExtra("LMBServiceGroup");
         String input = intent.getStringExtra("LMBService");
         //PortalPhoneNumber = input;
         PortalPhoneNumber = g.getData();
+        GroupName = globals.getDatag();
 
         Intent notificationIntent = new Intent(this, LMB_Application.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
@@ -214,6 +226,7 @@ public class LMBService extends Service {
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("LMB Service")
                 .setContentText("Portal number: "+input)
+                .setContentText("Group Name: " +inputgroup)
                 .setSmallIcon(R.drawable.ic_android)
                 .setContentIntent(pendingIntent)
                 .build();

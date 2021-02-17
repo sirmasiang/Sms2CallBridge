@@ -15,6 +15,7 @@ import android.widget.EditText;
 public class LMB_Application extends Activity {
     private static final String TAG ="LMB_Application";
     private EditText PhoneNumer;
+    private EditText GroupName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +23,7 @@ public class LMB_Application extends Activity {
         setContentView(R.layout.activity_lmb__application);
         Log.d(TAG,"LMB Application - onCreate");
         PhoneNumer = findViewById(R.id.PortalPhoneNumber);
+        GroupName = findViewById(R.id.GroupID);
     }
 
     /**
@@ -55,14 +57,21 @@ public class LMB_Application extends Activity {
         Log.d(TAG,"LMB Application - startService");
         LMBService mLMBService = new LMBService();
         Globals g = Globals.getInstance();
+        Globals x = Globals.getInstance();
 
         //String input = editTextInput.getText().toString();
         //String input = "Hello World";
         String input = PhoneNumer.getText().toString();
         g.setData(input);
 
+        String inputgroup = GroupName.getText().toString();
+        x.setDatag(inputgroup);
+
         Intent serviceIntent = new Intent(this, LMBService.class);
         serviceIntent.putExtra("LMBService", input);
+
+        Intent IntentGroup = new Intent(this, LMBService.class);
+        IntentGroup.putExtra("LMBServiceGroup", inputgroup);
 
         if(!isMyServiceRunning(mLMBService.getClass())) {
             //startService(new Intent(getBaseContext(), LMBService.class));
