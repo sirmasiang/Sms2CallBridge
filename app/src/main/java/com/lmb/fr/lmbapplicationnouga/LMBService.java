@@ -85,7 +85,8 @@ public class LMBService extends Service {
                     Log.d(TAG, "onReceive: " + strMessage);
                     Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
 
-                    if (GroupName.length() == 0) {
+                    if (GroupName.length() == 0) { // ne pourrait on pas créer une méthode qui contient toutes les conditions ci dessous
+                        //puis faire appel a la méthode simplement ensuite ?
 
                         if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("ouvrir")) {
                             // envoie d'un SMS de confirmation de l'ouverture du portail
@@ -160,7 +161,13 @@ public class LMBService extends Service {
 
                     }
                     else{
-                        Toast.makeText(context, "C'est bien",Toast.LENGTH_SHORT).show();
+                        if (contactExists(context, numTel)) {
+                            Toast.makeText(context, "Telephone présent",Toast.LENGTH_SHORT).show();
+                        }
+                        else {
+                            Toast.makeText(context, "Téléphone absent",Toast.LENGTH_SHORT).show();
+                        }
+                        //Toast.makeText(context, "C'est bien",Toast.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -280,11 +287,11 @@ public class LMBService extends Service {
         return null;
     }
 
-    public boolean contactExists(Context context, String number) {
+    public boolean contactExists(Context context, String numTel) {
         // number is the phone number
-        Uri lookupUri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number));
+        Uri lookupUri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(numTel));
 
-        String[] mPhoneNumberProjection = {ContactsContract.PhoneLookup._ID, ContactsContract.PhoneLookup.NUMBER, ContactsContract.PhoneLookup.DISPLAY_NAME};
+        String[] mPhoneNumberProjection = {ContactsContract.PhoneLookup._ID, ContactsContract.PhoneLookup.NUMBER};
         Cursor cur = context.getContentResolver().query(lookupUri, mPhoneNumberProjection, null, null, null);
         try {
             if (cur.moveToFirst()) {
