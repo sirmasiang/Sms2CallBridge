@@ -74,8 +74,7 @@ public class LMBService extends Service {
 
                     String numTel = msgs[i].getOriginatingAddress();
 
-                    if (GroupName.length() == 0) { // ne pourrait on pas créer une méthode qui contient toutes les conditions ci dessous
-                        //puis faire appel a la méthode simplement ensuite ?
+                    if (GroupName.length() == 0) {
 
                         message(context,intent);
                     }
@@ -83,9 +82,11 @@ public class LMBService extends Service {
                     else{
                         if (contactExists(context, numTel)) {
                             Toast.makeText(context, "Telephone présent", Toast.LENGTH_SHORT).show();
+                            Log.d(TAG,"Téléphone détecté" + numTel);
                             message(context,intent);
                         } else {
                             Toast.makeText(context, "Téléphone absent", Toast.LENGTH_SHORT).show();
+                            Log.d(TAG,"Non détecté");
                         }
                         //Toast.makeText(context, "C'est bien",Toast.LENGTH_SHORT).show();
                     }
