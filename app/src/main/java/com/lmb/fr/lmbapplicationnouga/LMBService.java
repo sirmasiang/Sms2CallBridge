@@ -18,16 +18,23 @@ import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+
 
 public class LMBService extends Service {
     private static final String TAG ="LMB_Application";
     private static final String CHANNEL_ID = "LMBChannelID";
     private String PortalPhoneNumber = "";
-    private String GroupName = "";
+    public String GroupName = "";
     public static boolean CallOnGoing = false;
-
 
     public void setCallOnGoing(boolean callOnGoing) {
         this.CallOnGoing = callOnGoing;
@@ -75,22 +82,20 @@ public class LMBService extends Service {
                     String numTel = msgs[i].getOriginatingAddress();
 
                     if (GroupName.length() == 0) {
-
                         message(context,intent);
                     }
-
                     else{
                         if (contactExists(context, numTel)) {
-                            Toast.makeText(context, "Telephone présent", Toast.LENGTH_SHORT).show();
-                            Log.d(TAG,"Téléphone détecté" + numTel);
-                            message(context,intent);
+                            if(getGroupsTitle(numTel,getApplicationContext())){
+                                message(context,intent);
+                            }
+                            //Toast.makeText(context, "Telephone présent", Toast.LENGTH_SHORT).show();
+                            //loadGroups(context,intent);
                         } else {
                             Toast.makeText(context, "Téléphone absent", Toast.LENGTH_SHORT).show();
-                            Log.d(TAG,"Non détecté");
                         }
                         //Toast.makeText(context, "C'est bien",Toast.LENGTH_SHORT).show();
                     }
-
                 }
             }
         }
@@ -308,7 +313,7 @@ public class LMBService extends Service {
                 }
 
                 else if (strMessageBody.toLowerCase().contains("setgroup")){
-                    numGroupe = strMessageBody.toLowerCase().substring(8);
+                    numGroupe = strMessageBody.substring(8);
                     GroupName = numGroupe;
                     SmsManager smsManager = SmsManager.getDefault();
                     smsManager.sendTextMessage(numTel, null, "le nouveau nom du groupe est le: " + numGroupe, null, null);
@@ -331,6 +336,7 @@ public class LMBService extends Service {
                     smsManager.sendTextMessage(numTel, null, "Test de l'application LMB\n" +
                             "le numero du portail est le: " + PortalPhoneNumber + ", le nom du groupe est : " + GroupName, null, null);
                     //Toast.makeText(getApplicationContext(), "SMS sent.",
+
 
                 } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("appel")) {
 
@@ -357,5 +363,76 @@ public class LMBService extends Service {
             }
         }
     }
+
+
+    public boolean getGroupsTitle(String numtel, Context context) {
+
+        List<String> groupsTitle = new ArrayList<>();
+        boolean present = false;
+        String contactId = null;
+
+        String output;
+        switch (numtel.length()) {
+            case 10:
+                output = String.format("(%s) %s-%s", numtel.substring(0,3), numtel.substring(3,6), numtel.substring(6,10));
+                break;
+            case 12:
+                output = String.format("%s0%s %s %s %s %s", numtel.substring(0,3), numtel.substring(3,4), numtel.substring(4,6), numtel.substring(6,8), numtel.substring(8,10), numtel.substring(10,12));
+                output = output.replace("+33", "");
+                break;
+            default:
+                return present;
+        }
+
+        Cursor cursorContactId  = context.getContentResolver().query(
+                ContactsContract.Data.CONTENT_URI,
+                new String[]{ContactsContract.Data.CONTACT_ID},
+                String.format("%s=? AND %s=?", ContactsContract.Data.DATA1, ContactsContract.Data.MIMETYPE),
+                new String[]{output, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE},
+                null);
+
+        while (cursorContactId.moveToNext()) {
+            contactId = cursorContactId.getString(0);
+        }
+        cursorContactId.close();
+
+
+        if (contactId == null)
+            return present;
+
+        List<String> groupIdList = new ArrayList<>();
+
+        Cursor cursorGroupId = context.getContentResolver().query(
+                ContactsContract.Data.CONTENT_URI,
+                new String[]{ContactsContract.Data.DATA1},
+                String.format("%s=? AND %s=?", ContactsContract.Data.CONTACT_ID, ContactsContract.Data.MIMETYPE),
+                new String[]{contactId, ContactsContract.CommonDataKinds.GroupMembership.CONTENT_ITEM_TYPE},
+                null);
+
+        while (cursorGroupId.moveToNext()) {
+            String groupId = cursorGroupId.getString(0);
+            groupIdList.add(groupId);
+        }
+        cursorGroupId.close();
+
+        Cursor cursorGroupTitle = getContentResolver().query(
+                ContactsContract.Groups.CONTENT_URI, new String[]{ContactsContract.Groups.TITLE},
+                ContactsContract.Groups._ID + " IN (" + TextUtils.join(",", groupIdList) + ")",
+                null,
+                null);
+
+        while (cursorGroupTitle.moveToNext()) {
+            String groupName = cursorGroupTitle.getString(0);
+            groupsTitle.add(groupName);
+            if (GroupName.equals(groupName)){
+                present = true;
+                return present;
+            }
+        }
+        cursorGroupTitle.close();
+        return present;
+    }
 }
+
+
 

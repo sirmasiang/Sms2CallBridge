@@ -6,13 +6,25 @@ public class Globals{
     // Global variable
     private String PhoneNumber;
     private String GroupName;
+    public String id;
+    public String title;
+
+    @Override
+    public String toString() {
+        return title;
+    }
+
+    public String getId() {
+        return id;
+    }
 
     // Restrict the constructor from being instantiated
-    private Globals(){}
+    public Globals(){}
 
     public void setData(String d){
         this.PhoneNumber=d;
     }
+
     public String getData(){
         return this.PhoneNumber;
     }
@@ -24,7 +36,6 @@ public class Globals{
     public String getDatag(){
         return this.GroupName;
     }
-
 
     public static synchronized Globals getInstance(){
         if(instance==null){
