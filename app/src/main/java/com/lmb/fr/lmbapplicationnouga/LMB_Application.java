@@ -10,12 +10,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
-public class LMB_Application extends Activity {
+public class LMB_Application extends Activity implements View.OnClickListener{
     private static final String TAG ="LMB_Application";
     private EditText PhoneNumer;
     private EditText GroupName;
+    private TextView Group, Phone;
+    private Button btnmessages,btnsave;
+    private String a,b;
+    Intent save,messages;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +30,46 @@ public class LMB_Application extends Activity {
         Log.d(TAG,"LMB Application - onCreate");
         PhoneNumer = findViewById(R.id.PortalPhoneNumber);
         GroupName = findViewById(R.id.GroupID);
+        btnmessages = findViewById(R.id.messages);
+        btnmessages.setOnClickListener(this);
+        btnsave = findViewById(R.id.Sauvegarder);
+        btnsave.setOnClickListener(this);
+
+        Globals g = Globals.getInstance();
+        a=g.getDatag();
+        b=g.getData();
+
+        Phone = (TextView) this.findViewById(R.id.PhoneString);
+        Phone.setText(" " + b + " ");
+
+        Group = (TextView) this.findViewById(R.id.GroupString);
+        Group.setText(" " + a + " ");
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+           /* case R.id.messages :
+                messages = new Intent (this,Messages.class);
+                this.startActivity(messages);
+                break;*/
+            case R.id.Sauvegarder :
+                save();
+                save = new Intent (this,LMB_Application.class);
+                this.startActivity(save);
+                break;
+        }
+    }
+
+
+    public void save(){
+        Globals N = Globals.getInstance();
+        Globals G = Globals.getInstance();
+
+        String inputNumber = PhoneNumer.getText().toString();
+        N.setData(inputNumber);
+        String inputGroup = GroupName.getText().toString();
+        G.setDatag(inputGroup);
     }
 
     /**
