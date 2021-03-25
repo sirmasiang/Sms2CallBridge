@@ -387,7 +387,7 @@ public class LMBService extends Service {
                 ContactsContract.Data.CONTENT_URI,
                 new String[]{ContactsContract.Data.CONTACT_ID},
                 String.format("%s=? AND %s=?", ContactsContract.Data.DATA4, ContactsContract.Data.MIMETYPE),
-                new String[]{numtel, ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER},
+                new String[]{numtel, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE},
                 null);
 
         while (cursorContactId.moveToNext()) {
@@ -441,8 +441,8 @@ public class LMBService extends Service {
         Cursor cursorContactId  = context.getContentResolver().query(
                 ContactsContract.Data.CONTENT_URI,
                 new String[]{ContactsContract.Data.CONTACT_ID},
-                String.format("%s=? AND %s=?", ContactsContract.Data.DATA1, ContactsContract.Data.MIMETYPE),
-                new String[]{numtel, ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER},
+                String.format("%s=? AND %s=?", ContactsContract.Data.DATA4, ContactsContract.Data.MIMETYPE),
+                new String[]{numtel, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE},
                 null);
 
         while (cursorContactId.moveToNext()) {
