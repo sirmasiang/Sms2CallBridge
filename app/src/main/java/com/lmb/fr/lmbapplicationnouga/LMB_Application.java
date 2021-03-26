@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.PersistableBundle;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -19,9 +18,9 @@ public class LMB_Application extends Activity implements View.OnClickListener{
     private EditText PhoneNumer;
     private EditText GroupName;
     private TextView Group, Phone;
-    private Button btnmessages,btnsave;
+    private Button btnmessages,btnsave,btnrefresh;
     private String a,b;
-    Intent save,messages;
+    Intent save,messages,refresh;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +33,8 @@ public class LMB_Application extends Activity implements View.OnClickListener{
         btnmessages.setOnClickListener(this);
         btnsave = findViewById(R.id.Sauvegarder);
         btnsave.setOnClickListener(this);
+        btnrefresh = findViewById(R.id.Refresh);
+        btnrefresh.setOnClickListener(this);
 
         Globals g = Globals.getInstance();
         a=g.getDatag();
@@ -49,8 +50,8 @@ public class LMB_Application extends Activity implements View.OnClickListener{
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-           /* case R.id.messages :
-                messages = new Intent (this,Messages.class);
+            /*case R.id.messages :
+                messages = new Intent (this, Messages.class);
                 this.startActivity(messages);
                 break;*/
             case R.id.Sauvegarder :
@@ -58,9 +59,21 @@ public class LMB_Application extends Activity implements View.OnClickListener{
                 save = new Intent (this,LMB_Application.class);
                 this.startActivity(save);
                 break;
+            case R.id.Refresh :
+                refresh();
+                refresh = new Intent (this,LMB_Application.class);
+                this.startActivity(refresh);
+                break;
         }
     }
 
+
+    public void refresh(){
+        Globals R = Globals.getInstance();
+
+        R.getData();
+        R.getDatag();
+    }
 
     public void save(){
         Globals N = Globals.getInstance();

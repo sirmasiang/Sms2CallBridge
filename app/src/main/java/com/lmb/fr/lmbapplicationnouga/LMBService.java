@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.ContactsContract;
+import android.provider.Telephony;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.telephony.SmsManager;
@@ -34,7 +35,9 @@ public class LMBService extends Service {
     private static final String CHANNEL_ID = "LMBChannelID";
     private String PortalPhoneNumber = "";
     public String GroupName = "";
+    public String Appel = "", Ouvrir= "", Ouvrir2= "", SetGroup= "", Settel= "", Avertissement= "", Test= "", Help= "", Appel2= "";
     public static boolean CallOnGoing = false;
+
 
     public void setCallOnGoing(boolean callOnGoing) {
         this.CallOnGoing = callOnGoing;
@@ -50,8 +53,13 @@ public class LMBService extends Service {
             //throw new UnsupportedOperationException("Not yet implemented");
             SmsMessage[] msgs;
             String format = null;
-            // Get the SMS message.
             Bundle bundle = intent.getExtras();
+            String strMessage = "";
+            String strMessageBody = "";
+            String num = "";
+            String numGroupe = "";
+            Globals S = Globals.getInstance();
+            // Get the SMS message.
 
 
             if (bundle != null) {
@@ -81,21 +89,67 @@ public class LMBService extends Service {
 
                     String numTel = msgs[i].getOriginatingAddress();
 
-                    if (GroupName.length() == 0) { // si le champ groupe de l'application est vide alors ne pas faire de vérification
+                    strMessage += "SMS from " + numTel;
+                    strMessageBody = msgs[i].getMessageBody();
+                    strMessage += " :" + strMessageBody + "\n";
+
+                    // Log and display the SMS message.
+                    Log.d(TAG, "onReceive: " + strMessage);
+                    Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
+
+
+                    if (strMessageBody.toLowerCase().contains("settel")) {
+                        SmsManager smsManager = SmsManager.getDefault();
+                        if (admin(numTel,getApplicationContext()) == true) {
+                            num = strMessageBody.toLowerCase().substring(8);
+                            PortalPhoneNumber = num;
+                            S.setData(num);
+                            smsManager.sendTextMessage(numTel, null, "Le nouveau numero du portail est le: " + num, null, null);
+                        }
+                        else {
+                            smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", null, null);
+
+                        }
+                    }
+
+                    else if (strMessageBody.toLowerCase().contains("setgroup")) {
+                        SmsManager smsManager = SmsManager.getDefault();
+                        if (admin(numTel, getApplicationContext()) == true) {
+                            numGroupe = strMessageBody.substring(9);
+                            GroupName = numGroupe;
+                            S.setDatag(numGroupe);
+                            smsManager.sendTextMessage(numTel, null, "Le nouveau nom du groupe est le: " + numGroupe, null, null);
+
+                        }
+                        else {
+                            smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", null, null);
+                        }
+                    }
+
+                    if (S.getDatag().length() == 0) {
                         message(context,intent);
                     }
-                    else{ // si il est rempli alors faire une cérification
+                    else{
                         if (contactExists(context, numTel)) {
                             if(getGroupsTitle(numTel,getApplicationContext())){
                                 message(context,intent);
                             }
+                            else {
+                                SmsManager smsManager = SmsManager.getDefault();
+                                smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.", null, null);
+
+                            }
                             //Toast.makeText(context, "Telephone présent", Toast.LENGTH_SHORT).show();
                             //loadGroups(context,intent);
-                        } else {
-                            Toast.makeText(context, "Téléphone absent", Toast.LENGTH_SHORT).show();
+                        }
+                        else {
+                            SmsManager smsManager = SmsManager.getDefault();
+                            smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.", null, null);
+
                         }
                         //Toast.makeText(context, "C'est bien",Toast.LENGTH_SHORT).show();
                     }
+
                 }
             }
         }
@@ -143,6 +197,9 @@ public class LMBService extends Service {
      * @see #stopSelfResult(int)
      */
     //@RequiresApi(api = Build.VERSION_CODES.O)
+
+
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Toast.makeText(this, "LMB service started", Toast.LENGTH_LONG).show();
@@ -152,6 +209,25 @@ public class LMBService extends Service {
         //return super.onStartCommand(intent, flags, startId);
         Globals g = Globals.getInstance();
         Globals globals = Globals.getInstance();
+        /*Globals A = Globals.getInstance();
+        Globals A2 = Globals.getInstance();
+        Globals O = Globals.getInstance();
+        Globals O2 = Globals.getInstance();
+        Globals Sg = Globals.getInstance();
+        Globals St = Globals.getInstance();
+        Globals Av = Globals.getInstance();
+        Globals T = Globals.getInstance();
+        Globals H = Globals.getInstance();
+
+        Appel = A.getDataA();
+        Appel2 = A2.getDataA2();
+        Ouvrir = O.getDataO();
+        Ouvrir2 = O2.getDataO2();
+        SetGroup = Sg.getDatasg();
+        Settel = St.getDatast();
+        Avertissement = Av.getDataAv();
+        Test = T.getDataT();
+        Help = H.getDataH();*/
 
 
         String inputgroup = intent.getStringExtra("LMBServiceGroup");
@@ -177,6 +253,28 @@ public class LMBService extends Service {
         return START_STICKY;
 
     }
+
+    /*public void save(){
+        Globals A = Globals.getInstance();
+        Globals A2 = Globals.getInstance();
+        Globals O = Globals.getInstance();
+        Globals O2 = Globals.getInstance();
+        Globals Sg = Globals.getInstance();
+        Globals St = Globals.getInstance();
+        Globals Av = Globals.getInstance();
+        Globals T = Globals.getInstance();
+        Globals H = Globals.getInstance();
+
+        Appel = A.getDataA();
+        Appel2 = A2.getDataA2();
+        Ouvrir = O.getDataO();
+        Ouvrir2 = O2.getDataO2();
+        SetGroup = Sg.getDatasg();
+        Settel = St.getDatast();
+        Avertissement = Av.getDataAv();
+        Test = T.getDataT();
+        Help = H.getDataH();
+    }*/
 
     /**
      * Called by the system to notify a Service that it is no longer used and is being removed.  The
@@ -213,7 +311,7 @@ public class LMBService extends Service {
         return null;
     }
 
-    public boolean contactExists(Context context, String numTel) { //Méthode qui vérifie si le numéro de téléphone passé en paramètre fais parti des contacts présents dans le téléphone
+    public boolean contactExists(Context context, String numTel) {
         // number is the phone number
         Uri lookupUri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(numTel));
 
@@ -230,7 +328,7 @@ public class LMBService extends Service {
         return false;
     }
 
-    public void message(Context context, Intent intent) {// Méthode ou sont stockés toutes les possibilités de message et leurs réponses
+    public void message(Context context, Intent intent) {
 
         Bundle bundle = intent.getExtras();
         SmsMessage[] msgs;
@@ -239,6 +337,7 @@ public class LMBService extends Service {
         String format = null;
         String num = "";
         String numGroupe = "";
+        Globals S = Globals.getInstance();
 
         if (bundle != null) {
             format = bundle.getString("format");
@@ -277,7 +376,6 @@ public class LMBService extends Service {
                 Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
 
 
-
                 if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("ouvrir")) {
                     // envoie d'un SMS de confirmation de l'ouverture du portail
                     //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
@@ -304,32 +402,6 @@ public class LMBService extends Service {
                         Toast.makeText(context, "C'est bien",Toast.LENGTH_SHORT).show();
                     }*/
 
-                if (strMessageBody.toLowerCase().contains("settel")) {
-                    SmsManager smsManager = SmsManager.getDefault();
-                    if (admin(numTel,getApplicationContext()) == true) {
-                        num = strMessageBody.toLowerCase().substring(7);
-                        PortalPhoneNumber = num;
-                        smsManager.sendTextMessage(numTel, null, "le nouveau numero du portail est le: " + num, null, null);
-                    }
-                    else {
-                        smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", null, null);
-
-                    }
-                }
-
-                else if (strMessageBody.toLowerCase().contains("setgroup")) {
-                    SmsManager smsManager = SmsManager.getDefault();
-                    if (admin(numTel, getApplicationContext()) == true) {
-                        numGroupe = strMessageBody.substring(8);
-                        GroupName = numGroupe;
-                        smsManager.sendTextMessage(numTel, null, "le nouveau nom du groupe est le: " + numGroupe, null, null);
-
-                    }
-                    else {
-                        smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", null, null);
-                    }
-                }
-
                 else if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("help")) {
                     // envoie d'un SMS d'aide sur les differentes commandes possible
                     SmsManager smsManager = SmsManager.getDefault();
@@ -345,7 +417,7 @@ public class LMBService extends Service {
                     //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
                     SmsManager smsManager = SmsManager.getDefault();
                     smsManager.sendTextMessage(numTel, null, "Test de l'application LMB\n" +
-                            "le numero du portail est le: " + PortalPhoneNumber + ", le nom du groupe est : " + GroupName, null, null);
+                            "le numero du portail est le: " + S.getData() + ", le nom du groupe est : " + S.getDatag(), null, null);
                     //Toast.makeText(getApplicationContext(), "SMS sent.",
 
 
@@ -375,7 +447,8 @@ public class LMBService extends Service {
         }
     }
 
-    public boolean getGroupsTitle(String numtel, Context context) {//Méthode de vérification des groupes en fonction du numéro de téléphone passé en paramètre
+
+    public boolean getGroupsTitle(String numtel, Context context) {
 
         List<String> groupsTitle = new ArrayList<>();
         boolean present = false;
@@ -383,7 +456,7 @@ public class LMBService extends Service {
 
 
 
-        Cursor cursorContactId  = context.getContentResolver().query( // recherche de l'id du numéro de  téléphone
+        Cursor cursorContactId  = context.getContentResolver().query(
                 ContactsContract.Data.CONTENT_URI,
                 new String[]{ContactsContract.Data.CONTACT_ID},
                 String.format("%s=? AND %s=?", ContactsContract.Data.DATA4, ContactsContract.Data.MIMETYPE),
@@ -401,7 +474,7 @@ public class LMBService extends Service {
 
         List<String> groupIdList = new ArrayList<>();
 
-        Cursor cursorGroupId = context.getContentResolver().query( //recherche des id des groupes correspondant à l'id du numéro de téléphone trouvé précédement
+        Cursor cursorGroupId = context.getContentResolver().query(
                 ContactsContract.Data.CONTENT_URI,
                 new String[]{ContactsContract.Data.DATA1},
                 String.format("%s=? AND %s=?", ContactsContract.Data.CONTACT_ID, ContactsContract.Data.MIMETYPE),
@@ -414,7 +487,7 @@ public class LMBService extends Service {
         }
         cursorGroupId.close();
 
-        Cursor cursorGroupTitle = getContentResolver().query( //recherche des titres des groupes correspondant à leurs id trouvés juste avant
+        Cursor cursorGroupTitle = getContentResolver().query(
                 ContactsContract.Groups.CONTENT_URI, new String[]{ContactsContract.Groups.TITLE},
                 ContactsContract.Groups._ID + " IN (" + TextUtils.join(",", groupIdList) + ")",
                 null,
@@ -423,7 +496,7 @@ public class LMBService extends Service {
         while (cursorGroupTitle.moveToNext()) {
             String groupName = cursorGroupTitle.getString(0);
             groupsTitle.add(groupName);
-            if (GroupName.equals(groupName)){ // vérification si un des groupes trouvés est identique a celui renseigné dans l'application
+            if (GroupName.equals(groupName)){
                 present = true;
                 return present;
             }
@@ -437,6 +510,19 @@ public class LMBService extends Service {
         List<String> groupsTitle = new ArrayList<>();
         boolean present = false;
         String contactId = null;
+
+        String output;
+       /* switch (numtel.length()) {
+            case 10:
+                output = String.format("(%s) %s-%s", numtel.substring(0,3), numtel.substring(3,6), numtel.substring(6,10));
+                break;
+            case 12:
+                output = String.format("%s0%s %s %s %s %s", numtel.substring(0,3), numtel.substring(3,4), numtel.substring(4,6), numtel.substring(6,8), numtel.substring(8,10), numtel.substring(10,12));
+                output = output.replace("+33", "");
+                break;
+            default:
+                return present;
+        }*/
 
         Cursor cursorContactId  = context.getContentResolver().query(
                 ContactsContract.Data.CONTENT_URI,
@@ -487,6 +573,5 @@ public class LMBService extends Service {
         return present;
     }
 }
-
 
 
