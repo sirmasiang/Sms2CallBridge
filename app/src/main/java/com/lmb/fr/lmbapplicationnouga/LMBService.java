@@ -98,51 +98,24 @@ public class LMBService extends Service {
                     Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
 
 
-                    if (strMessageBody.toLowerCase().contains("settel")) {
-                        SmsManager smsManager = SmsManager.getDefault();
-                        if (admin(numTel,getApplicationContext()) == true) {
-                            num = strMessageBody.toLowerCase().substring(8);
-                            PortalPhoneNumber = num;
-                            S.setData(num);
-                            smsManager.sendTextMessage(numTel, null, "Le nouveau numero du portail est le: " + num, null, null);
-                        }
-                        else {
-                            smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", null, null);
-
-                        }
-                    }
-
-                    else if (strMessageBody.toLowerCase().contains("setgroup")) {
-                        SmsManager smsManager = SmsManager.getDefault();
-                        if (admin(numTel, getApplicationContext()) == true) {
-                            numGroupe = strMessageBody.substring(9);
-                            GroupName = numGroupe;
-                            S.setDatag(numGroupe);
-                            smsManager.sendTextMessage(numTel, null, "Le nouveau nom du groupe est le: " + numGroupe, null, null);
-
-                        }
-                        else {
-                            smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", null, null);
-                        }
-                    }
+                    adminmesasge(context, intent);
 
                     if (S.getDatag().length() == 0) {
                         message(context,intent);
                     }
-                    else{
+                    else {
                         if (contactExists(context, numTel)) {
-                            if(getGroupsTitle(numTel,getApplicationContext())){
-                                message(context,intent);
-                            }
-                            else {
+                            if (getGroupsTitle(numTel, getApplicationContext())) {
+                                message(context, intent);
+                            } else {
                                 SmsManager smsManager = SmsManager.getDefault();
+                                Log.d(TAG, "Debug avant");
                                 smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.", null, null);
-
+                                Log.d(TAG, "Debug après");
                             }
                             //Toast.makeText(context, "Telephone présent", Toast.LENGTH_SHORT).show();
                             //loadGroups(context,intent);
-                        }
-                        else {
+                        } else {
                             SmsManager smsManager = SmsManager.getDefault();
                             smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.", null, null);
 
@@ -254,6 +227,81 @@ public class LMBService extends Service {
 
     }
 
+
+    public void adminmesasge(Context context, Intent intent) {
+        SmsMessage[] msgs;
+        String format = null;
+        Bundle bundle = intent.getExtras();
+        String strMessage = "";
+        String strMessageBody = "";
+        String num = "";
+        String numGroupe = "";
+        Globals S = Globals.getInstance();
+        // Get the SMS message.
+
+
+        if (bundle != null) {
+            format = bundle.getString("format");
+        }
+        // Retrieve the SMS message received.
+        Object[] pdus = (Object[]) bundle.get("pdus");
+        if (pdus != null) {
+            // Check the Android version.
+/*
+            boolean isVersionM =
+                    (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M);
+*/
+            // Fill the msgs array.
+            msgs = new SmsMessage[pdus.length];
+            for (int i = 0; i < msgs.length; i++) {
+                // Check Android version and use appropriate createFromPdu.
+//                if (isVersionM) {
+                // If Android version M or newer:
+                msgs[i] = SmsMessage.createFromPdu((byte[]) pdus[i], format);
+/*
+                } else {
+                    // If Android version L or older:
+                    msgs[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
+                }
+*/
+
+                String numTel = msgs[i].getOriginatingAddress();
+
+                strMessage += "SMS from " + numTel;
+                strMessageBody = msgs[i].getMessageBody();
+                strMessage += " :" + strMessageBody + "\n";
+
+                // Log and display the SMS message.
+                Log.d(TAG, "onReceive: " + strMessage);
+                Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
+
+
+                if (strMessageBody.toLowerCase().contains("settel")) {
+                    SmsManager smsManager = SmsManager.getDefault();
+                    if (admin(numTel, getApplicationContext()) == true) {
+                        num = strMessageBody.toLowerCase().substring(8);
+                        PortalPhoneNumber = num;
+                        S.setData(num);
+                        smsManager.sendTextMessage(numTel, null, "Le nouveau numero du portail est le: " + num, null, null);
+                    } else {
+                        smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", null, null);
+
+                    }
+                } else if (strMessageBody.toLowerCase().contains("setgroup")) {
+                    SmsManager smsManager = SmsManager.getDefault();
+                    if (admin(numTel, getApplicationContext()) == true) {
+                        numGroupe = strMessageBody.substring(9);
+                        GroupName = numGroupe;
+                        S.setDatag(numGroupe);
+                        smsManager.sendTextMessage(numTel, null, "Le nouveau nom du groupe est le: " + numGroupe, null, null);
+
+                    } else {
+                        smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", null, null);
+                    }
+                }
+            }
+        }
+    }
     /*public void save(){
         Globals A = Globals.getInstance();
         Globals A2 = Globals.getInstance();
@@ -453,6 +501,7 @@ public class LMBService extends Service {
         List<String> groupsTitle = new ArrayList<>();
         boolean present = false;
         String contactId = null;
+        Globals g = Globals.getInstance();
 
 
 
@@ -496,7 +545,7 @@ public class LMBService extends Service {
         while (cursorGroupTitle.moveToNext()) {
             String groupName = cursorGroupTitle.getString(0);
             groupsTitle.add(groupName);
-            if (GroupName.equals(groupName)){
+            if (g.getDatag().equals(groupName)){
                 present = true;
                 return present;
             }
