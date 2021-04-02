@@ -97,9 +97,9 @@ public class LMBService extends Service {
                     Log.d(TAG, "onReceive: " + strMessage);
                     Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
 
-                    if (strMessageBody.toLowerCase().contains("settel")) {
+                    if (strMessageBody.toLowerCase().contains("settel")) { //Vérification si c'est une commande admin
                         SmsManager smsManager = SmsManager.getDefault();
-                        if (admin(numTel,getApplicationContext()) == true) {
+                        if (admin(numTel,getApplicationContext()) == true) {// Vérification d'appartenance au groupe Admin
                             num = strMessageBody.toLowerCase().substring(8);
                             PortalPhoneNumber = num;
                             S.setData(num);
@@ -111,9 +111,9 @@ public class LMBService extends Service {
                         }
                     }
 
-                    else if (strMessageBody.toLowerCase().contains("setgroup")) {
+                    else if (strMessageBody.toLowerCase().contains("setgroup")) { // Vérification si c'est une commande admin
                         SmsManager smsManager = SmsManager.getDefault();
-                        if (admin(numTel, getApplicationContext()) == true) {
+                        if (admin(numTel, getApplicationContext()) == true) { // Vérification d'appartenance au groupe Admin
                             numGroupe = strMessageBody.substring(9);
                             GroupName = numGroupe;
                             S.setDatag(numGroupe);
@@ -125,12 +125,12 @@ public class LMBService extends Service {
                         }
                     }
 
-                  else if (S.getDatag().length() == 0) {
-                        message(context,intent);
+                  else if (S.getDatag().length() == 0) { // Vérification si la valeur du groupe est nulle ou non
+                        message(context,intent); // Si oui alors pas de vérification
                     }
                     else {
-                        if (contactExists(context, numTel)) {
-                            if (getGroupsTitle(numTel, getApplicationContext())) {
+                        if (contactExists(context, numTel)) { // Si non vérification dans les contacts du téléphone
+                            if (getGroupsTitle(numTel, getApplicationContext())) {// Vérification de l'appartenance dans le groupe renseigné dans l'application
                                 message(context, intent);
                             } else {
                                 SmsManager smsManager = SmsManager.getDefault();
@@ -266,7 +266,7 @@ public class LMBService extends Service {
         return null;
     }
 
-    public boolean contactExists(Context context, String numTel) {
+    public boolean contactExists(Context context, String numTel) { // Méthode de vérification dans les contacts
         // number is the phone number
         Uri lookupUri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(numTel));
 
@@ -283,7 +283,7 @@ public class LMBService extends Service {
         return false;
     }
 
-    public void message(Context context, Intent intent) {
+    public void message(Context context, Intent intent) { // Méthode contenant les différents messages d'envoi possible et leurs retours
 
         Bundle bundle = intent.getExtras();
         SmsMessage[] msgs;
@@ -403,7 +403,7 @@ public class LMBService extends Service {
     }
 
 
-    public boolean getGroupsTitle(String numtel, Context context) {
+    public boolean getGroupsTitle(String numtel, Context context) { // Méthode de vérification dans les groupes
 
         List<String> groupsTitle = new ArrayList<>();
         boolean present = false;
@@ -461,7 +461,7 @@ public class LMBService extends Service {
         return present;
     }
 
-    public boolean admin(String numtel, Context context) {
+    public boolean admin(String numtel, Context context) { // Méthode de vérification dans le groupe admin
 
         List<String> groupsTitle = new ArrayList<>();
         boolean present = false;
