@@ -98,30 +98,39 @@ public class LMBService extends Service {
                     Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
 
                     if (strMessageBody.toLowerCase().contains("settel")) {
-                        SmsManager smsManager = SmsManager.getDefault();
+//                        SmsManager smsManager = SmsManager.getDefault();
                         if (admin(numTel,getApplicationContext()) == true) {
                             num = strMessageBody.toLowerCase().substring(8);
                             PortalPhoneNumber = num;
                             S.setData(num);
-                            smsManager.sendTextMessage(numTel, null, "Le nouveau numero du portail est le: " + num, null, null);
+
+                            LMB_SMS_Send Sms = new LMB_SMS_Send();
+                            Sms.sendSMS(numTel, "Le nouveau numero du portail est le: " + num, context);
+//                            smsManager.sendTextMessage(numTel, null, "Le nouveau numero du portail est le: " + num, null, null);
                         }
                         else {
-                            smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", null, null);
+//                            smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", null, null);
+                            LMB_SMS_Send Sms = new LMB_SMS_Send();
+                            Sms.sendSMS(numTel, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", context);
 
                         }
                     }
 
                     else if (strMessageBody.toLowerCase().contains("setgroup")) {
-                        SmsManager smsManager = SmsManager.getDefault();
+//                        SmsManager smsManager = SmsManager.getDefault();
                         if (admin(numTel, getApplicationContext()) == true) {
                             numGroupe = strMessageBody.substring(9);
                             GroupName = numGroupe;
                             S.setDatag(numGroupe);
-                            smsManager.sendTextMessage(numTel, null, "Le nouveau nom du groupe est le: " + numGroupe, null, null);
+//                            smsManager.sendTextMessage(numTel, null, "Le nouveau nom du groupe est le: " + numGroupe, null, null);
+                            LMB_SMS_Send Sms = new LMB_SMS_Send();
+                            Sms.sendSMS(numTel, "Le nouveau nom du groupe est le: " + numGroupe, context);
 
                         }
                         else {
-                            smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", null, null);
+//                            smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", null, null);
+                            LMB_SMS_Send Sms = new LMB_SMS_Send();
+                            Sms.sendSMS(numTel, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", context);
                         }
                     }
 
@@ -133,16 +142,24 @@ public class LMBService extends Service {
                             if (getGroupsTitle(numTel, getApplicationContext())) {
                                 message(context, intent);
                             } else {
-                                SmsManager smsManager = SmsManager.getDefault();
+//                                SmsManager smsManager = SmsManager.getDefault();
                                 Log.d(TAG, "Debug avant");
-                                smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.", null, null);
+//                                smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.", null, null);
+
+                                LMB_SMS_Send Sms = new LMB_SMS_Send();
+//                                Sms.sendSMS(numTel, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.", context);
+                                Sms.sendSMS(numTel, "Vous n'êtes pas adhérent du club.", context);
+
                                 Log.d(TAG, "Debug après");
                             }
                             //Toast.makeText(context, "Telephone présent", Toast.LENGTH_SHORT).show();
                             //loadGroups(context,intent);
                         } else {
-                            SmsManager smsManager = SmsManager.getDefault();
-                            smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.", null, null);
+//                            SmsManager smsManager = SmsManager.getDefault();
+//                            smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.", null, null);
+                            LMB_SMS_Send Sms = new LMB_SMS_Send();
+                            Sms.sendSMS(numTel,"Vous n'êtes pas adhérent du club. Veuillez contacter un membre du CA.", context);
+//                            Sms.sendSMS(numTel, "Vous n'êtes pas adhérent du club.", context);
                         }
 
                     }
@@ -334,11 +351,13 @@ public class LMBService extends Service {
                 if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("ouvrir")) {
                     // envoie d'un SMS de confirmation de l'ouverture du portail
                     //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
-                    SmsManager smsManager = SmsManager.getDefault();
+//                    SmsManager smsManager = SmsManager.getDefault();
                     //Toast.makeText(getApplicationContext(), "SMS sent.",
 
                     if ("IDLE".equals(CallListening.getCurrent_state()) && CallOnGoing == false) {
-                        smsManager.sendTextMessage(numTel, null, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
+//                        smsManager.sendTextMessage(numTel, null, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
+                        LMB_SMS_Send Sms = new LMB_SMS_Send();
+                        Sms.sendSMS(numTel, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", context);
                         //num = "tel:07000010009796";
                         num = "tel:" + PortalPhoneNumber;
 
@@ -347,7 +366,10 @@ public class LMBService extends Service {
                         appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         context.startActivity(appel);
                     } else {
-                        smsManager.sendTextMessage(numTel, null, "Ouverture du portail déjà en cours.", null, null);
+//                        smsManager.sendTextMessage(numTel, null, "Ouverture du portail déjà en cours.", null, null);
+                        LMB_SMS_Send Sms = new LMB_SMS_Send();
+                        Sms.sendSMS(numTel, "Ouverture du portail déjà en cours.", context);
+
                     }
 
                 }
@@ -359,20 +381,31 @@ public class LMBService extends Service {
 
                 else if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("help")) {
                     // envoie d'un SMS d'aide sur les differentes commandes possible
-                    SmsManager smsManager = SmsManager.getDefault();
-                    smsManager.sendTextMessage(numTel, null, "Texte d'aide:\n" +
+//                    SmsManager smsManager = SmsManager.getDefault();
+//                    smsManager.sendTextMessage(numTel, null, "Texte d'aide:\n" +
+//                            "settel <numero>\n" +
+//                            "setgroup <nom>\n" +
+//                            "test\n" +
+//                            "ouvrir\n" +
+//                            "appel", null, null);
+                    LMB_SMS_Send Sms = new LMB_SMS_Send();
+                    Sms.sendSMS(numTel, "Texte d'aide:\n" +
                             "settel <numero>\n" +
                             "setgroup <nom>\n" +
                             "test\n" +
                             "ouvrir\n" +
-                            "appel", null, null);
+                            "appel", context);
 
                 } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("test")) {
                     // envoie d'un SMS de confirmation de l'ouverture du portail
                     //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
-                    SmsManager smsManager = SmsManager.getDefault();
-                    smsManager.sendTextMessage(numTel, null, "Test de l'application LMB\n" +
-                            "le numero du portail est le: " + S.getData() + ", le nom du groupe est : " + S.getDatag(), null, null);
+//                    SmsManager smsManager = SmsManager.getDefault();
+//                    smsManager.sendTextMessage(numTel, null, "Test de l'application LMB\n" +
+//                            "le numero du portail est le: " + S.getData() + ", le nom du groupe est : " + S.getDatag(), null, null);
+                    LMB_SMS_Send Sms = new LMB_SMS_Send();
+                    Sms.sendSMS(numTel, "Test de l'application LMB\n" +
+                            "le numero du portail est le: " + S.getData() + ", le nom du groupe est : " + S.getDatag(), context);
+
                     //Toast.makeText(getApplicationContext(), "SMS sent.",
 
 
@@ -380,21 +413,26 @@ public class LMBService extends Service {
 
                     // envoie d'un SMS de confirmation de l'ouverture du portail
                     //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
-                    SmsManager smsManager = SmsManager.getDefault();
+//                    SmsManager smsManager = SmsManager.getDefault();
                     //Toast.makeText(getApplicationContext(), "SMS sent.",
 
                     if (("IDLE".equals(CallListening.getCurrent_state())) && CallOnGoing == false) {
                         // Set the global variable here
                         CallOnGoing = true;
 
-                        smsManager.sendTextMessage(numTel, null, "Appel de votre mobile en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
+//                        smsManager.sendTextMessage(numTel, null, "Appel de votre mobile en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
+                        LMB_SMS_Send Sms = new LMB_SMS_Send();
+                        Sms.sendSMS(numTel, "Appel de votre mobile en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", context);
+
                         num = "tel:" + numTel;
                         Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
                         //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
                         appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         context.startActivity(appel);
                     } else {
-                        smsManager.sendTextMessage(numTel, null, "Appel de votre mobile déjà en cours.", null, null);
+//                        smsManager.sendTextMessage(numTel, null, "Appel de votre mobile déjà en cours.", null, null);
+                        LMB_SMS_Send Sms = new LMB_SMS_Send();
+                        Sms.sendSMS(numTel, "Appel de votre mobile déjà en cours.", context);
                     }
                 }
 
