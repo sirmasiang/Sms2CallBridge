@@ -99,19 +99,16 @@ public class LMBService extends Service {
 
                     if (strMessageBody.toLowerCase().contains("settel")) { //Vérification si c'est une commande admin
                         SmsManager smsManager = SmsManager.getDefault();
-                        if (admin(numTel,getApplicationContext()) == true) {// Vérification d'appartenance au groupe Admin
+                        if (admin(numTel, getApplicationContext()) == true) {// Vérification d'appartenance au groupe Admin
                             num = strMessageBody.toLowerCase().substring(8);
                             PortalPhoneNumber = num;
                             S.setData(num);
                             smsManager.sendTextMessage(numTel, null, "Le nouveau numero du portail est le: " + num, null, null);
-                        }
-                        else {
+                        } else {
                             smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", null, null);
 
                         }
-                    }
-
-                    else if (strMessageBody.toLowerCase().contains("setgroup")) { // Vérification si c'est une commande admin
+                    } else if (strMessageBody.toLowerCase().contains("setgroup")) { // Vérification si c'est une commande admin
                         SmsManager smsManager = SmsManager.getDefault();
                         if (admin(numTel, getApplicationContext()) == true) { // Vérification d'appartenance au groupe Admin
                             numGroupe = strMessageBody.substring(9);
@@ -119,30 +116,32 @@ public class LMBService extends Service {
                             S.setDatag(numGroupe);
                             smsManager.sendTextMessage(numTel, null, "Le nouveau nom du groupe est le: " + numGroupe, null, null);
 
-                        }
-                        else {
+                        } else {
                             smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", null, null);
                         }
-                    }
-
-                  else if (S.getDatag().length() == 0) { // Vérification si la valeur du groupe est nulle ou non
-                        message(context,intent); // Si oui alors pas de vérification
-                    }
-                    else {
+                    } else if (S.getDatag().length() == 0) { // Vérification si la valeur du groupe est nulle ou non
+                        message(context, intent); // Si oui alors pas de vérification
+                    } else {
                         if (contactExists(context, numTel)) { // Si non vérification dans les contacts du téléphone
                             if (getGroupsTitle(numTel, getApplicationContext())) {// Vérification de l'appartenance dans le groupe renseigné dans l'application
                                 message(context, intent);
                             } else {
                                 SmsManager smsManager = SmsManager.getDefault();
                                 Log.d(TAG, "Debug avant");
-                                smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.", null, null);
+//                                smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.", null, null);
+//                                smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bure", null, null);
+
+                                String MsgTexte = "Vous n'etes pas adhérent du club pour cette année. Veuillez contacter un membre du bureau pour plus d'informations.";
+                                smsManager.sendTextMessage(numTel, null, MsgTexte, null, null);
                                 Log.d(TAG, "Debug après");
                             }
                             //Toast.makeText(context, "Telephone présent", Toast.LENGTH_SHORT).show();
                             //loadGroups(context,intent);
                         } else {
                             SmsManager smsManager = SmsManager.getDefault();
-                            smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.", null, null);
+//                            smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.", null, null);
+                            String MsgTexte = "Vous n'etes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.";
+                            smsManager.sendTextMessage(numTel, null, MsgTexte, null, null);
                         }
 
                     }
