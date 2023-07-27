@@ -1,11 +1,11 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
+    compileSdk 31
     defaultConfig {
         applicationId "com.lmb.fr.lmbapplicationnouga"
-        minSdkVersion 24
-        targetSdkVersion 28
+        minSdk 31
+        targetSdk 31
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

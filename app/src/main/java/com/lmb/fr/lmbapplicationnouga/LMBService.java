@@ -1,6 +1,8 @@
 package com.lmb.fr.lmbapplicationnouga;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -37,7 +39,6 @@ public class LMBService extends Service {
     public String GroupName = "";
     public String Appel = "", Ouvrir= "", Ouvrir2= "", SetGroup= "", Settel= "", Avertissement= "", Test= "", Help= "", Appel2= "";
     public static boolean CallOnGoing = false;
-
 
     public void setCallOnGoing(boolean callOnGoing) {
         this.CallOnGoing = callOnGoing;
@@ -151,12 +152,25 @@ public class LMBService extends Service {
         }
     };
 
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence channelName = "My Notification Channel";
+            String channelDescription = "Channel description here";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, channelName, importance);
+            channel.setDescription(channelDescription);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
     /**
      * Called by the system when the service is first created.  Do not call this method directly.
      */
     @Override
     public void onCreate() {
         super.onCreate();
+        createNotificationChannel();
         IntentFilter filter = new IntentFilter();
         filter.addAction("android.provider.Telephony.SMS_RECEIVED");
         Log.d(TAG,"LMBService - onCreate");
@@ -214,8 +228,9 @@ public class LMBService extends Service {
         GroupName = globals.getDatag();
 
         Intent notificationIntent = new Intent(this, LMB_Application.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, 0);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent,
+                PendingIntent.FLAG_IMMUTABLE);
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("LMB Service")
