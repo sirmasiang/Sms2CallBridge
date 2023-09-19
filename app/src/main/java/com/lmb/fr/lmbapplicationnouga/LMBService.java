@@ -62,6 +62,7 @@ public class LMBService extends Service {
             Globals S = Globals.getInstance();
             // Get the SMS message.
 
+            Log.d(TAG,"LMBService - SMS received");
 
             if (bundle != null) {
                 format = bundle.getString("format");
@@ -126,9 +127,10 @@ public class LMBService extends Service {
                         }
                     }
 
-                  else if (S.getDatag().length() == 0) { // Vérification si la valeur du groupe est nulle ou non
+                    else if (S.getDatag().length() == 0) { // Vérification si la valeur du groupe est nulle ou non
                         message(context,intent); // Si oui alors pas de vérification
                     }
+
                     else {
                         if (contactExists(context, numTel)) { // Si non vérification dans les contacts du téléphone
                             if (getGroupsTitle(numTel, getApplicationContext())) {// Vérification de l'appartenance dans le groupe renseigné dans l'application
@@ -149,6 +151,9 @@ public class LMBService extends Service {
                     }
                 }
             }
+
+            Log.d(TAG,"LMBService - SMS treated");
+
         }
     };
 
@@ -309,6 +314,8 @@ public class LMBService extends Service {
         String numGroupe = "";
         Globals S = Globals.getInstance();
 
+        Log.d(TAG, "Begin message method");
+
         if (bundle != null) {
             format = bundle.getString("format");
         }
@@ -346,7 +353,7 @@ public class LMBService extends Service {
                 Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
 
 
-                if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("ouvrir")) {
+                if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("ouvrir")) {
                     // envoie d'un SMS de confirmation de l'ouverture du portail
                     //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
                     SmsManager smsManager = SmsManager.getDefault();
@@ -372,7 +379,7 @@ public class LMBService extends Service {
                         Toast.makeText(context, "C'est bien",Toast.LENGTH_SHORT).show();
                     }*/
 
-                else if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("help")) {
+                else if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("help")) {
                     // envoie d'un SMS d'aide sur les differentes commandes possible
                     SmsManager smsManager = SmsManager.getDefault();
                     smsManager.sendTextMessage(numTel, null, "Texte d'aide:\n" +
@@ -382,7 +389,7 @@ public class LMBService extends Service {
                             "ouvrir\n" +
                             "appel", null, null);
 
-                } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("test")) {
+                } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("test")) {
                     // envoie d'un SMS de confirmation de l'ouverture du portail
                     //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
                     SmsManager smsManager = SmsManager.getDefault();
@@ -391,7 +398,7 @@ public class LMBService extends Service {
                     //Toast.makeText(getApplicationContext(), "SMS sent.",
 
 
-                } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").equals("appel")) {
+                } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("appel")) {
 
                     // envoie d'un SMS de confirmation de l'ouverture du portail
                     //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
@@ -415,6 +422,9 @@ public class LMBService extends Service {
 
             }
         }
+
+        Log.d(TAG, "End message method");
+
     }
 
 

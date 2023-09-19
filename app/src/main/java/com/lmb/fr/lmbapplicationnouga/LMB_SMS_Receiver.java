@@ -32,6 +32,7 @@ public class LMB_SMS_Receiver extends BroadcastReceiver {
         String num = "";
         PhoneNumber = intent.getStringExtra("LMBService");
         ;
+        Log.d(TAG, "Begin the onReceive");
 
         if (bundle != null) {
             format = bundle.getString("format");
@@ -69,7 +70,7 @@ public class LMB_SMS_Receiver extends BroadcastReceiver {
                 Log.d(TAG, "onReceive: " + strMessage);
                 Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
 
-                if(strMessageBody.toLowerCase().replaceAll("\\s", "").equals("ouvrir")) {
+                if(strMessageBody.toLowerCase().replaceAll("\\s", "").contains("ouvrir")) {
                     // envoie d'un SMS de confirmation de l'ouverture du portail
                     //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
                     SmsManager smsManager = SmsManager.getDefault();
@@ -90,7 +91,7 @@ public class LMB_SMS_Receiver extends BroadcastReceiver {
                         smsManager.sendTextMessage(numTel, null, "Ouverture du portail déjà en cours.", null, null);
                     }
                 }
-                else if(strMessageBody.toLowerCase().replaceAll("\\s", "").equals("test")) {
+                else if(strMessageBody.toLowerCase().replaceAll("\\s", "").contains("test")) {
                     // envoie d'un SMS de confirmation de l'ouverture du portail
                     //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
                     SmsManager smsManager = SmsManager.getDefault();
@@ -100,5 +101,8 @@ public class LMB_SMS_Receiver extends BroadcastReceiver {
 
             }
         }
+
+        Log.d(TAG, "End the onReceive");
+
     }
 }
