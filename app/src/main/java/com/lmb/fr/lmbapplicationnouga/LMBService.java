@@ -1,5 +1,6 @@
 package com.lmb.fr.lmbapplicationnouga;
 
+import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -9,6 +10,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -18,12 +20,15 @@ import android.os.IBinder;
 import android.provider.ContactsContract;
 import android.provider.Telephony;
 import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
+import android.os.PowerManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -352,34 +357,12 @@ public class LMBService extends Service {
                 Log.d(TAG, "onReceive: " + strMessage);
                 Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
 
-
-                if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("ouvrir")) {
-                    // envoie d'un SMS de confirmation de l'ouverture du portail
-                    //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
-                    SmsManager smsManager = SmsManager.getDefault();
-                    //Toast.makeText(getApplicationContext(), "SMS sent.",
-
-                    if ("IDLE".equals(CallListening.getCurrent_state()) && CallOnGoing == false) {
-                        smsManager.sendTextMessage(numTel, null, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
-                        //num = "tel:07000010009796";
-                        num = "tel:" + PortalPhoneNumber;
-
-                        Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
-                        //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
-                        appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        context.startActivity(appel);
-                    } else {
-                        smsManager.sendTextMessage(numTel, null, "Ouverture du portail déjà en cours.", null, null);
-                    }
-
-                }
-
                    /* else if (GroupName !=""){
                         //faire le test d'appartenance
                         Toast.makeText(context, "C'est bien",Toast.LENGTH_SHORT).show();
                     }*/
 
-                else if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("help")) {
+                if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("help")) {
                     // envoie d'un SMS d'aide sur les differentes commandes possible
                     SmsManager smsManager = SmsManager.getDefault();
                     smsManager.sendTextMessage(numTel, null, "Texte d'aide:\n" +
@@ -398,23 +381,96 @@ public class LMBService extends Service {
                     //Toast.makeText(getApplicationContext(), "SMS sent.",
 
 
-                } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("appel")) {
+                } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("ouvrir")) {
+
+                    // Ici, vous pouvez ajouter votre logique pour allumer l'écran
+                    // Utilisez la permission WAKE_LOCK pour allumer l'écran
+                    PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                    PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
+                            PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                            "MonApplication:WakeLock"
+                    );
+                    wakeLock.acquire();
 
                     // envoie d'un SMS de confirmation de l'ouverture du portail
                     //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
                     SmsManager smsManager = SmsManager.getDefault();
                     //Toast.makeText(getApplicationContext(), "SMS sent.",
 
-                    if (("IDLE".equals(CallListening.getCurrent_state())) && CallOnGoing == false) {
+                    //if ("IDLE".equals(CallListening.getCurrent_state()) && CallOnGoing == false)
+                    if ("IDLE".equals(CallListening.getCurrent_state()) ) {
+                        CallOnGoing = true;
+
+                        smsManager.sendTextMessage(numTel, null, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
+                        //num = "tel:07000010009796";
+                        num = "tel:" + PortalPhoneNumber;
+
+                        Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
+                        //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
+                        appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                        // Permission check
+                        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                            // Vous avez la permission, lancez l'appel téléphonique
+                            context.startActivity(appel);
+                        } else {
+                            // Demandez la permission à l'utilisateur
+                            Log.d(TAG, "L'application n'a pas les droits necessaires pour lancer un appel !");
+                        }
+
+                    } else {
+                        smsManager.sendTextMessage(numTel, null, "Ouverture du portail déjà en cours.", null, null);
+                    }
+
+                } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("appel")) {
+
+
+
+                    // Ici, vous pouvez ajouter votre logique pour allumer l'écran
+                    // Utilisez la permission WAKE_LOCK pour allumer l'écran
+                    PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                    PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
+                            PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                            "MonApplication:WakeLock"
+                    );
+                    wakeLock.acquire();
+
+
+
+
+
+
+
+                    // envoie d'un SMS de confirmation de l'ouverture du portail
+                    //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
+                    SmsManager smsManager = SmsManager.getDefault();
+                    //Toast.makeText(getApplicationContext(), "SMS sent.",
+
+                    //if (("IDLE".equals(CallListening.getCurrent_state())) && CallOnGoing == false)
+                    if (("IDLE".equals(CallListening.getCurrent_state())) ) {
                         // Set the global variable here
                         CallOnGoing = true;
 
                         smsManager.sendTextMessage(numTel, null, "Appel de votre mobile en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
                         num = "tel:" + numTel;
+
+                        Log.d(TAG, "Call the SMS emitter :" + num);
+
                         Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
                         //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
                         appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        context.startActivity(appel);
+
+                        // Permission check
+                        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                            // Vous avez la permission, lancez l'appel téléphonique
+                            context.startActivity(appel);
+                        } else {
+                            // Demandez la permission à l'utilisateur
+                            Log.d(TAG, "L'application n'a pas les droits necessaires pour lancer un appel !");
+                        }
+
+
+
                     } else {
                         smsManager.sendTextMessage(numTel, null, "Appel de votre mobile déjà en cours.", null, null);
                     }
