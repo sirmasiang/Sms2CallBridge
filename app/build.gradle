@@ -1,7 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdk 31
+    compileSdk 34
+    buildToolsVersion "34.0.0-rc3"
     defaultConfig {
         applicationId "com.lmb.fr.lmbapplicationnouga"
         minSdk 31

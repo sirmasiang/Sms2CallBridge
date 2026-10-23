@@ -383,8 +383,7 @@ public class LMBService extends Service {
 
                 } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("ouvrir")) {
 
-                    // Ici, vous pouvez ajouter votre logique pour allumer l'écran
-                    // Utilisez la permission WAKE_LOCK pour allumer l'écran
+                    // Utilisez la permission WAKE_LOCK pour allumer l'écran si nécessaire
                     PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
                     PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
                             PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
@@ -392,31 +391,15 @@ public class LMBService extends Service {
                     );
                     wakeLock.acquire();
 
-                    // envoie d'un SMS de confirmation de l'ouverture du portail
-                    //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
                     SmsManager smsManager = SmsManager.getDefault();
-                    //Toast.makeText(getApplicationContext(), "SMS sent.",
 
-                    //if ("IDLE".equals(CallListening.getCurrent_state()) && CallOnGoing == false)
-                    if ("IDLE".equals(CallListening.getCurrent_state()) ) {
+                    if ("IDLE".equals(CallListening.getCurrent_state())) {
                         CallOnGoing = true;
 
-                        smsManager.sendTextMessage(numTel, null, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
-                        //num = "tel:07000010009796";
-                        num = "tel:" + PortalPhoneNumber;
+                        smsManager.sendTextMessage(numTel, null, "Ouverture du portail par INTRATONE en cours. Si rien ne se passe, veuillez ré-essayer dans 30 secondes.", null, null);
 
-                        Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
-                        //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
-                        appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-                        // Permission check
-                        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-                            // Vous avez la permission, lancez l'appel téléphonique
-                            context.startActivity(appel);
-                        } else {
-                            // Demandez la permission à l'utilisateur
-                            Log.d(TAG, "L'application n'a pas les droits necessaires pour lancer un appel !");
-                        }
+                        // Déclenchement de l'ouverture du portail Intratone
+                        triggerIntratoneOpening();
 
                     } else {
                         smsManager.sendTextMessage(numTel, null, "Ouverture du portail déjà en cours.", null, null);
@@ -424,8 +407,6 @@ public class LMBService extends Service {
 
                 } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("appel")) {
 
-
-
                     // Ici, vous pouvez ajouter votre logique pour allumer l'écran
                     // Utilisez la permission WAKE_LOCK pour allumer l'écran
                     PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -434,12 +415,6 @@ public class LMBService extends Service {
                             "MonApplication:WakeLock"
                     );
                     wakeLock.acquire();
-
-
-
-
-
-
 
                     // envoie d'un SMS de confirmation de l'ouverture du portail
                     //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
@@ -608,6 +583,62 @@ public class LMBService extends Service {
         }
         cursorGroupTitle.close();
         return present;
+    }
+
+    private void triggerIntratoneOpening() {
+        new Thread(() -> {
+            try {
+                // 1. Lancement de l'application Intratone si nécessaire
+                try {
+                    Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.cogelec.notificationpush");
+                    if (launchIntent != null) {
+                        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(launchIntent);
+                        Log.d(TAG, "Application Intratone lancée.");
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Erreur lors du lancement de l'application Intratone", e);
+                }
+
+                // Attendre 1 seconde pour l'initialisation si l'app vient de s'ouvrir
+                Thread.sleep(1000);
+
+                // 2. Requête API directe d'ouverture de la porte à Intratone
+                java.net.URL url = new java.net.URL("https://sip.intratone.info/api/access/open/clemobil");
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                conn.setRequestProperty("Authorization", "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpbmRpY2F0aWYiOiIzMyIsImlkIjoiNTA4NDc3NSIsInRlbCI6IjA3ODM4OTQ3NDQiLCJjb2RlIjoiOTk0MSIsImRldmljZV9pZCI6IjliMmE4MmI0NDQ2Yjc0NDkiLCJkZXZpY2UiOiJNb3Rvcm9sYSBtb3RvIGcoNTApIiwiZXhwIjoxNzkzMzY4MzI2LCJpYXQiOjE3OTI3NTk5MjYsImp0aSI6IjZhZGI1ODc2ODY1ODI0LjQyNDIxODc5IiwibmJmIjoxNzkyNzU5OTI2fQ.RkznqeQPmTBRCv0NZv2Tu8DI9HIGWLNeP_R20ZBItpBM1ICc6XcFSoZMwFZ2gI6Y1w16i8DtvmbIZ-HD878oOQ");
+                conn.setDoOutput(true);
+
+                String postData = "phonenumber=07000012934166&access_id=332594";
+                try (java.io.OutputStream os = conn.getOutputStream()) {
+                    byte[] input = postData.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                    os.write(input, 0, input.length);
+                }
+
+                int responseCode = conn.getResponseCode();
+                Log.d(TAG, "Intratone API Response Code: " + responseCode);
+
+                // Lecture et affichage de la réponse du serveur dans Logcat
+                java.io.InputStream is = (responseCode >= 200 && responseCode < 300) ? conn.getInputStream() : conn.getErrorStream();
+                if (is != null) {
+                    java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(is));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                    reader.close();
+                    Log.d(TAG, "Intratone API Response Body: " + response.toString());
+                }
+
+            } catch (Exception e) {
+                Log.e(TAG, "Erreur lors de l'appel d'ouverture Intratone", e);
+            } finally {
+                CallOnGoing = false;
+            }
+        }).start();
     }
 }
 
