@@ -166,8 +166,8 @@ public class LMBAccessibilityService extends AccessibilityService {
             }
         }
 
-        // 3. Exécution d'UN SEUL tap tactile (350, 510)
-        Log.d(TAG, "Exécution de l'unique tap tactile aux coordonnées (350, 510)...");
+        // 3. Exécution du tap tactile via les droits de gestes (350, 510) avec fallback AdbTapClient
+        Log.d(TAG, "Exécution du tap tactile aux coordonnées (350, 510)...");
         performTapGesture(350, 510);
     }
 
@@ -185,10 +185,10 @@ public class LMBAccessibilityService extends AccessibilityService {
     private void performTapGesture(float x, float y) {
         Path swipePath = new Path();
         swipePath.moveTo(x, y);
-        swipePath.lineTo(x, y);
+        swipePath.lineTo(x + 1, y + 1);
 
         GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
-        gestureBuilder.addStroke(new GestureDescription.StrokeDescription(swipePath, 0, 150));
+        gestureBuilder.addStroke(new GestureDescription.StrokeDescription(swipePath, 0, 100));
 
         boolean dispatched = dispatchGesture(gestureBuilder.build(), new GestureResultCallback() {
             @Override
@@ -200,11 +200,17 @@ public class LMBAccessibilityService extends AccessibilityService {
             @Override
             public void onCancelled(GestureDescription gestureDescription) {
                 super.onCancelled(gestureDescription);
-                Log.e(TAG, "Geste tactile ANNULÉ par le système aux coordonnées (" + x + ", " + y + ") !");
+                Log.e(TAG, "Geste tactile ANNULÉ par le système aux coordonnées (" + x + ", " + y + ") ! Secours via AdbTapClient...");
+                AdbTapClient.executeTap((int) x, (int) y);
             }
         }, mainHandler);
 
         Log.d(TAG, "dispatchGesture transmis au système pour (" + x + ", " + y + ") : result=" + dispatched);
+
+        if (!dispatched) {
+            Log.w(TAG, "dispatchGesture a renvoyé false. Exécution de secours via AdbTapClient...");
+            AdbTapClient.executeTap((int) x, (int) y);
+        }
     }
 
     @Override
