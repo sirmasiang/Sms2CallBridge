@@ -46,7 +46,18 @@ public class LMB_Application extends Activity implements View.OnClickListener{
         Group = (TextView) this.findViewById(R.id.GroupString);
         Group.setText(" " + a + " ");
 
+        checkAndPromptPermissions();
         checkAndLaunchIntratone(getIntent());
+    }
+
+    private void checkAndPromptPermissions() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (!android.provider.Settings.canDrawOverlays(this)) {
+                Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        android.net.Uri.parse("package:" + getPackageName()));
+                startActivity(intent);
+            }
+        }
     }
 
     @Override

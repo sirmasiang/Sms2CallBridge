@@ -20,6 +20,33 @@ android {
     namespace 'com.lmb.fr.lmbapplicationnouga'
 }
 
+// Tâche Gradle automatique pour réactiver l'Accessibilité et la Superposition après chaque installation
+tasks.register('enableAccessibilityPermissions') {
+    doLast {
+        try {
+            def adb = android.getAdbExecutable().toString()
+            exec {
+                commandLine adb, 'shell', 'settings', 'put', 'secure', 'enabled_accessibility_services', 'com.lmb.fr.lmbapplicationnouga/.LMBAccessibilityService'
+            }
+            exec {
+                commandLine adb, 'shell', 'settings', 'put', 'secure', 'accessibility_enabled', '1'
+            }
+            exec {
+                commandLine adb, 'shell', 'appops', 'set', 'com.lmb.fr.lmbapplicationnouga', 'SYSTEM_ALERT_WINDOW', 'allow'
+            }
+            println "Autorisations d'Accessibilité et de Superposition appliquées avec succès via Gradle !"
+        } catch (Exception e) {
+            println "Avertissement lors de l'application des autorisations ADB: " + e.message
+        }
+    }
+}
+
+tasks.configureEach { task ->
+    if (task.name.startsWith("install")) {
+        task.finalizedBy('enableAccessibilityPermissions')
+    }
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:28.0.0-rc02'
