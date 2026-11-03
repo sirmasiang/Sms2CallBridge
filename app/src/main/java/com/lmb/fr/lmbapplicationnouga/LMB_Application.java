@@ -45,6 +45,37 @@ public class LMB_Application extends Activity implements View.OnClickListener{
 
         Group = (TextView) this.findViewById(R.id.GroupString);
         Group.setText(" " + a + " ");
+
+        checkAndLaunchIntratone(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        checkAndLaunchIntratone(intent);
+    }
+
+    private void checkAndLaunchIntratone(Intent intent) {
+        if (intent != null && intent.getBooleanExtra("OPEN_INTRATONE", false)) {
+            Log.d(TAG, "Demande d'ouverture reçue. Lancement d'Intratone au premier plan...");
+            LMBAccessibilityService.triggerClickPending = true;
+            intent.removeExtra("OPEN_INTRATONE");
+
+            try {
+                Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.cogelec.notificationpush");
+                if (launchIntent == null) {
+                    launchIntent = new Intent();
+                    launchIntent.setClassName("com.cogelec.notificationpush", "com.cogelec.notificationpush.activities.MenuManagerActivity");
+                }
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(launchIntent);
+                Log.d(TAG, "Application Intratone lancée au premier plan avec succès !");
+                //finish();
+            } catch (Exception e) {
+                Log.e(TAG, "Erreur lors du lancement d'Intratone depuis LMB_Application", e);
+            }
+        }
     }
 
     @Override

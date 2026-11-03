@@ -100,9 +100,8 @@ public class LMBService extends Service {
                     strMessageBody = msgs[i].getMessageBody();
                     strMessage += " :" + strMessageBody + "\n";
 
-                    // Log and display the SMS message.
+                    // Log SMS message without Toast overlay
                     Log.d(TAG, "onReceive: " + strMessage);
-                    Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
 
                     if (strMessageBody.toLowerCase().contains("settel")) { //Vérification si c'est une commande admin
                         SmsManager smsManager = SmsManager.getDefault();
@@ -353,9 +352,8 @@ public class LMBService extends Service {
                 strMessageBody = msgs[i].getMessageBody();
                 strMessage += " :" + strMessageBody + "\n";
 
-                // Log and display the SMS message.
+                // Log SMS message without Toast overlay
                 Log.d(TAG, "onReceive: " + strMessage);
-                Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
 
                    /* else if (GroupName !=""){
                         //faire le test d'appartenance
@@ -588,58 +586,108 @@ public class LMBService extends Service {
     private void triggerIntratoneOpening() {
         new Thread(() -> {
             try {
-                // 1. Lancement de l'application Intratone si nécessaire
+                LMBAccessibilityService.triggerClickPending = true;
+
+                // 1. Lancement de LMB_Application au premier plan via PendingIntent (bypasse les restrictions d'arrière-plan Android 10+)
                 try {
-                    Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.cogelec.notificationpush");
-                    if (launchIntent != null) {
-                        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(launchIntent);
-                        Log.d(TAG, "Application Intratone lancée.");
-                    }
+                    Intent appIntent = new Intent(this, LMB_Application.class);
+                    appIntent.putExtra("OPEN_INTRATONE", true);
+                    appIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+                    PendingIntent pi = PendingIntent.getActivity(this, 0, appIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+                    pi.send();
+                    Log.d(TAG, "Demande d'ouverture transmise à LMB_Application via PendingIntent.");
                 } catch (Exception e) {
-                    Log.e(TAG, "Erreur lors du lancement de l'application Intratone", e);
+                    Log.e(TAG, "Erreur lors du lancement via PendingIntent", e);
                 }
 
-                // Attendre 1 seconde pour l'initialisation si l'app vient de s'ouvrir
-                Thread.sleep(1000);
+                // 2. Lancement direct via am start
+                try {
+                    Runtime.getRuntime().exec("am start -n com.cogelec.notificationpush/.activities.MenuManagerActivity");
+                } catch (Exception ignored) {}
 
-                // 2. Requête API directe d'ouverture de la porte à Intratone
-                java.net.URL url = new java.net.URL("https://sip.intratone.info/api/access/open/clemobil");
-                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                conn.setRequestProperty("Authorization", "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpbmRpY2F0aWYiOiIzMyIsImlkIjoiNTA4NDc3NSIsInRlbCI6IjA3ODM4OTQ3NDQiLCJjb2RlIjoiOTk0MSIsImRldmljZV9pZCI6IjliMmE4MmI0NDQ2Yjc0NDkiLCJkZXZpY2UiOiJNb3Rvcm9sYSBtb3RvIGcoNTApIiwiZXhwIjoxNzkzMzY4MzI2LCJpYXQiOjE3OTI3NTk5MjYsImp0aSI6IjZhZGI1ODc2ODY1ODI0LjQyNDIxODc5IiwibmJmIjoxNzkyNzU5OTI2fQ.RkznqeQPmTBRCv0NZv2Tu8DI9HIGWLNeP_R20ZBItpBM1ICc6XcFSoZMwFZ2gI6Y1w16i8DtvmbIZ-HD878oOQ");
-                conn.setDoOutput(true);
-
-                String postData = "phonenumber=07000012934166&access_id=332594";
-                try (java.io.OutputStream os = conn.getOutputStream()) {
-                    byte[] input = postData.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-                    os.write(input, 0, input.length);
-                }
-
-                int responseCode = conn.getResponseCode();
-                Log.d(TAG, "Intratone API Response Code: " + responseCode);
-
-                // Lecture et affichage de la réponse du serveur dans Logcat
-                java.io.InputStream is = (responseCode >= 200 && responseCode < 300) ? conn.getInputStream() : conn.getErrorStream();
-                if (is != null) {
-                    java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(is));
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line);
-                    }
-                    reader.close();
-                    Log.d(TAG, "Intratone API Response Body: " + response.toString());
-                }
+                // 3. Appel de précaution via l'API
+                //refreshIntratoneToken();
+                //executeOpenRequest();
 
             } catch (Exception e) {
-                Log.e(TAG, "Erreur lors de l'appel d'ouverture Intratone", e);
+                Log.e(TAG, "Erreur globale lors du processus d'ouverture Intratone", e);
             } finally {
                 CallOnGoing = false;
             }
         }).start();
     }
+
+ /*   private void refreshIntratoneToken() {
+        try {
+            java.net.URL url = new java.net.URL("https://sip.intratone.info/api/access/refresh");
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            String currentToken = Globals.getInstance().getIntratoneToken();
+            conn.setRequestProperty("Authorization", "Bearer " + currentToken);
+            conn.setDoOutput(true);
+
+            String postData = "[332594]";
+            try (java.io.OutputStream os = conn.getOutputStream()) {
+                byte[] input = postData.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            int responseCode = conn.getResponseCode();
+            Log.d(TAG, "Intratone Token Refresh Response Code: " + responseCode);
+
+            // Vérification si un nouveau token est retourné dans les en-têtes HTTP
+            String newAuthHeader = conn.getHeaderField("Authorization");
+            if (newAuthHeader != null && newAuthHeader.startsWith("Bearer ")) {
+                String newToken = newAuthHeader.substring(7).trim();
+                Globals.getInstance().setIntratoneToken(newToken);
+                Log.d(TAG, "Nouveau token Intratone capturé et mis à jour automatiquement !");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Erreur lors du rafraîchissement du token Intratone", e);
+        }
+    }*/
+
+    /*private boolean executeOpenRequest() {
+        try {
+            java.net.URL url = new java.net.URL("https://sip.intratone.info/api/access/open/clemobil");
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            String currentToken = Globals.getInstance().getIntratoneToken();
+            conn.setRequestProperty("Authorization", "Bearer " + currentToken);
+            conn.setDoOutput(true);
+
+            String postData = "phonenumber=07000012934166&access_id=332594";
+            try (java.io.OutputStream os = conn.getOutputStream()) {
+                byte[] input = postData.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            int responseCode = conn.getResponseCode();
+            Log.d(TAG, "Intratone API Response Code: " + responseCode);
+
+            java.io.InputStream is = (responseCode >= 200 && responseCode < 300) ? conn.getInputStream() : conn.getErrorStream();
+            if (is != null) {
+                java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(is));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
+                Log.d(TAG, "Intratone API Response Body: " + response);
+
+                if (responseCode == 200 && response.toString().contains("\"success\":true")) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Erreur lors de la requête d'ouverture Intratone", e);
+        }
+        return false;
+    }*/
 }
 
 
