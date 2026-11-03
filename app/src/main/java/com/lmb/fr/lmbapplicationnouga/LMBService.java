@@ -180,6 +180,7 @@ public class LMBService extends Service {
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
+        LMBAccessibilityService.autoEnableAccessibilityService(this);
         IntentFilter filter = new IntentFilter();
         filter.addAction("android.provider.Telephony.SMS_RECEIVED");
         Log.d(TAG,"LMBService - onCreate");

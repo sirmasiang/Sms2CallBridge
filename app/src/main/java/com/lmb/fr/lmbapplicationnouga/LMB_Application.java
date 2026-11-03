@@ -50,13 +50,42 @@ public class LMB_Application extends Activity implements View.OnClickListener{
         checkAndLaunchIntratone(getIntent());
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkAndPromptPermissions();
+    }
+
     private void checkAndPromptPermissions() {
+        // Tenter d'activer l'accessibilité automatiquement via WRITE_SECURE_SETTINGS
+        LMBAccessibilityService.autoEnableAccessibilityService(this);
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             if (!android.provider.Settings.canDrawOverlays(this)) {
-                Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        android.net.Uri.parse("package:" + getPackageName()));
-                startActivity(intent);
+                try {
+                    Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            android.net.Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+                } catch (Exception ignored) {}
             }
+
+            // Ignorer les optimisations de batterie pour éviter la coupure du service
+            android.os.PowerManager pm = (android.os.PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
+                try {
+                    Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                    intent.setData(android.net.Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+                } catch (Exception ignored) {}
+            }
+        }
+
+        // Si l'accessibilité n'est toujours pas active, ouvrir les paramètres d'accessibilité pour l'utilisateur
+        if (!LMBAccessibilityService.isServiceEnabled(this)) {
+            try {
+                Intent intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                startActivity(intent);
+            } catch (Exception ignored) {}
         }
     }
 

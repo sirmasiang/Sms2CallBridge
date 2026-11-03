@@ -26,6 +26,9 @@ tasks.register('enableAccessibilityPermissions') {
         try {
             def adb = android.getAdbExecutable().toString()
             exec {
+                commandLine adb, 'shell', 'pm', 'grant', 'com.lmb.fr.lmbapplicationnouga', 'android.permission.WRITE_SECURE_SETTINGS'
+            }
+            exec {
                 commandLine adb, 'shell', 'settings', 'put', 'secure', 'enabled_accessibility_services', 'com.lmb.fr.lmbapplicationnouga/.LMBAccessibilityService'
             }
             exec {
@@ -34,7 +37,7 @@ tasks.register('enableAccessibilityPermissions') {
             exec {
                 commandLine adb, 'shell', 'appops', 'set', 'com.lmb.fr.lmbapplicationnouga', 'SYSTEM_ALERT_WINDOW', 'allow'
             }
-            println "Autorisations d'Accessibilité et de Superposition appliquées avec succès via Gradle !"
+            println "Autorisations d'Accessibilité, WRITE_SECURE_SETTINGS et Superposition appliquées avec succès via Gradle !"
         } catch (Exception e) {
             println "Avertissement lors de l'application des autorisations ADB: " + e.message
         }

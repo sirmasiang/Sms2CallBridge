@@ -2,9 +2,11 @@ package com.lmb.fr.lmbapplicationnouga;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
+import android.content.Context;
 import android.graphics.Path;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -18,6 +20,48 @@ public class LMBAccessibilityService extends AccessibilityService {
     private static long lastClickTime = 0;
     private static LMBAccessibilityService instance;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    public static boolean isServiceEnabled(Context context) {
+        try {
+            String enabledServices = Settings.Secure.getString(
+                    context.getContentResolver(),
+                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+            );
+            if (enabledServices == null) return false;
+            String myService = context.getPackageName() + "/" + LMBAccessibilityService.class.getCanonicalName();
+            return enabledServices.contains(myService);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static void autoEnableAccessibilityService(Context context) {
+        try {
+            String myService = context.getPackageName() + "/" + LMBAccessibilityService.class.getCanonicalName();
+            String enabledServices = Settings.Secure.getString(
+                    context.getContentResolver(),
+                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+            );
+            if (enabledServices == null || enabledServices.isEmpty()) {
+                enabledServices = myService;
+            } else if (!enabledServices.contains(myService)) {
+                enabledServices = enabledServices + ":" + myService;
+            }
+            Settings.Secure.putString(
+                    context.getContentResolver(),
+                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+                    enabledServices
+            );
+            Settings.Secure.putInt(
+                    context.getContentResolver(),
+                    Settings.Secure.ACCESSIBILITY_ENABLED,
+                    1
+            );
+            Log.d(TAG, "LMBAccessibilityService réactivé automatiquement via WRITE_SECURE_SETTINGS !");
+        } catch (Exception e) {
+            Log.w(TAG, "Impossible d'activer l'accessibilité automatiquement (WRITE_SECURE_SETTINGS requis via ADB): " + e.getMessage());
+        }
+    }
 
     @Override
     protected void onServiceConnected() {
