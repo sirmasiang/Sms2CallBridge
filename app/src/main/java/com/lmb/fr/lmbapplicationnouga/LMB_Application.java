@@ -1,10 +1,13 @@
 package com.lmb.fr.lmbapplicationnouga;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.PersistableBundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,6 +15,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class LMB_Application extends Activity implements View.OnClickListener{
     private static final String TAG ="LMB_Application";
@@ -36,6 +42,8 @@ public class LMB_Application extends Activity implements View.OnClickListener{
         btnrefresh = findViewById(R.id.Refresh);
         btnrefresh.setOnClickListener(this);
 
+        checkAndRequestPermissions();
+
         Globals g = Globals.getInstance();
         a=g.getDatag();
         b=g.getData();
@@ -45,6 +53,25 @@ public class LMB_Application extends Activity implements View.OnClickListener{
 
         Group = (TextView) this.findViewById(R.id.GroupString);
         Group.setText(" " + a + " ");
+    }
+
+    private void checkAndRequestPermissions() {
+        String[] permissions = new String[]{
+                Manifest.permission.RECEIVE_SMS,
+                Manifest.permission.SEND_SMS,
+                Manifest.permission.READ_CONTACTS,
+                Manifest.permission.CALL_PHONE,
+                Manifest.permission.READ_PHONE_STATE
+        };
+        List<String> listPermissionsNeeded = new ArrayList<>();
+        for (String p : permissions) {
+            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(p);
+            }
+        }
+        if (!listPermissionsNeeded.isEmpty()) {
+            ActivityCompat.requestPermissions(this, listPermissionsNeeded.toArray(new String[0]), 100);
+        }
     }
 
     @Override
@@ -107,8 +134,7 @@ public class LMB_Application extends Activity implements View.OnClickListener{
 
     @Override
     protected void onDestroy() {
-        Log.d(TAG,"LMB Application - onDestroy and stop service");
-        stopService(new Intent(getBaseContext(), LMBService.class));
+        Log.d(TAG,"LMB Application - onDestroy");
         super.onDestroy();
     }
 

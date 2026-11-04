@@ -17,6 +17,10 @@
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <queries>
+        <package android:name="com.cogelec.notificationpush" />
+    </queries>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/lmblogo"
@@ -36,14 +40,15 @@
             </intent-filter>
         </activity>
 
-        <!-- <receiver -->
-        <!-- android:name=".LMB_SMS_Receiver" -->
-        <!-- android:enabled="true" -->
-        <!-- android:exported="true"> -->
-        <!-- <intent-filter> -->
-        <!-- <action android:name="android.provider.Telephony.SMS_RECEIVED" /> -->
-        <!-- </intent-filter> -->
-        <!-- </receiver> -->
+        <receiver
+            android:name=".LMB_SMS_Receiver"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter android:priority="999">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
         <receiver android:name=".CallListening"
             android:exported="true">
             <intent-filter>

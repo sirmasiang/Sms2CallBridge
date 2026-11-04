@@ -54,105 +54,73 @@ public class LMBService extends Service {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            // TODO: This method is called when the BroadcastReceiver is receiving
-            // an Intent broadcast.
-            //throw new UnsupportedOperationException("Not yet implemented");
-            SmsMessage[] msgs;
-            String format = null;
-            Bundle bundle = intent.getExtras();
+            SmsMessage[] msgs = Telephony.Sms.Intents.getMessagesFromIntent(intent);
             String strMessage = "";
             String strMessageBody = "";
             String num = "";
             String numGroupe = "";
             Globals S = Globals.getInstance();
-            // Get the SMS message.
 
-            Log.d(TAG,"LMBService - SMS received");
+            Log.d(TAG, "LMBService - SMS received");
 
-            if (bundle != null) {
-                format = bundle.getString("format");
-            }
-            // Retrieve the SMS message received.
-            Object[] pdus = (Object[]) bundle.get("pdus");
-            if (pdus != null) {
-                // Check the Android version.
-/*
-            boolean isVersionM =
-                    (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M);
-*/
-                // Fill the msgs array.
-                msgs = new SmsMessage[pdus.length];
+            if (msgs != null && msgs.length > 0) {
                 for (int i = 0; i < msgs.length; i++) {
-                    // Check Android version and use appropriate createFromPdu.
-//                if (isVersionM) {
-                    // If Android version M or newer:
-                    msgs[i] = SmsMessage.createFromPdu((byte[]) pdus[i], format);
-/*
-                } else {
-                    // If Android version L or older:
-                    msgs[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
-                }
-*/
+                    if (msgs[i] == null) continue;
 
                     String numTel = msgs[i].getOriginatingAddress();
+                    if (numTel == null) continue;
 
-                    strMessage += "SMS from " + numTel;
                     strMessageBody = msgs[i].getMessageBody();
-                    strMessage += " :" + strMessageBody + "\n";
+                    if (strMessageBody == null) continue;
 
-                    // Log and display the SMS message.
+                    strMessage = "SMS from " + numTel + " :" + strMessageBody + "\n";
+
                     Log.d(TAG, "onReceive: " + strMessage);
                     Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
 
-                    if (strMessageBody.toLowerCase().contains("settel")) { //Vérification si c'est une commande admin
-                        SmsManager smsManager = SmsManager.getDefault();
-                        if (admin(numTel,getApplicationContext()) == true) {// Vérification d'appartenance au groupe Admin
+                    if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("help")) {
+                        sendSms(context, numTel, "Texte d'aide:\n" +
+                                "settel <numero>\n" +
+                                "setgroup <nom>\n" +
+                                "test\n" +
+                                "ouvrir\n" +
+                                "appel");
+                    }
+                    else if (strMessageBody.toLowerCase().contains("settel")) { //Vérification si c'est une commande admin
+                        if (admin(numTel, getApplicationContext())) {// Vérification d'appartenance au groupe Admin
                             num = strMessageBody.toLowerCase().substring(8);
                             PortalPhoneNumber = num;
                             S.setData(num);
-                            smsManager.sendTextMessage(numTel, null, "Le nouveau numero du portail est le: " + num, null, null);
-                        }
-                        else {
-                            smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", null, null);
-
+                            sendSms(context, numTel, "Le nouveau numero du portail est le: " + num);
+                        } else {
+                            sendSms(context, numTel, "Vous n'êtes pas autorisé(e) à utiliser cette commande.");
                         }
                     }
-
                     else if (strMessageBody.toLowerCase().contains("setgroup")) { // Vérification si c'est une commande admin
-                        SmsManager smsManager = SmsManager.getDefault();
-                        if (admin(numTel, getApplicationContext()) == true) { // Vérification d'appartenance au groupe Admin
+                        if (admin(numTel, getApplicationContext())) { // Vérification d'appartenance au groupe Admin
                             numGroupe = strMessageBody.substring(9);
                             GroupName = numGroupe;
                             S.setDatag(numGroupe);
-                            smsManager.sendTextMessage(numTel, null, "Le nouveau nom du groupe est le: " + numGroupe, null, null);
-
-                        }
-                        else {
-                            smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas autorisé(e) à utiliser cette commande.", null, null);
+                            sendSms(context, numTel, "Le nouveau nom du groupe est le: " + numGroupe);
+                        } else {
+                            sendSms(context, numTel, "Vous n'êtes pas autorisé(e) à utiliser cette commande.");
                         }
                     }
-
-                    else if (S.getDatag().length() == 0) { // Vérification si la valeur du groupe est nulle ou non
-                        message(context,intent); // Si oui alors pas de vérification
+                    else if (S.getDatag() == null || S.getDatag().isEmpty()) { // Vérification si la valeur du groupe est nulle ou non
+                        processCommand(context, numTel, strMessageBody);
                     }
-
                     else {
                         if (contactExists(context, numTel)) { // Si non vérification dans les contacts du téléphone
                             if (getGroupsTitle(numTel, getApplicationContext())) {// Vérification de l'appartenance dans le groupe renseigné dans l'application
-                                message(context, intent);
+                                processCommand(context, numTel, strMessageBody);
                             } else {
-                                SmsManager smsManager = SmsManager.getDefault();
                                 Log.d(TAG, "Debug avant");
-                                smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.", null, null);
+                                sendSms(context, numTel, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.");
                                 Log.d(TAG, "Debug après");
                             }
-                            //Toast.makeText(context, "Telephone présent", Toast.LENGTH_SHORT).show();
-                            //loadGroups(context,intent);
                         } else {
-                            SmsManager smsManager = SmsManager.getDefault();
-                            smsManager.sendTextMessage(numTel, null, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.", null, null);
+                            sendSms(context, numTel, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.");
                         }
-
                     }
                 }
             }
@@ -184,7 +152,7 @@ public class LMBService extends Service {
         IntentFilter filter = new IntentFilter();
         filter.addAction("android.provider.Telephony.SMS_RECEIVED");
         Log.d(TAG,"LMBService - onCreate");
-        registerReceiver(LMB_SMS_Receiver,filter);
+        registerReceiver(LMB_SMS_Receiver, filter);
     }
 
     /**
@@ -291,14 +259,52 @@ public class LMBService extends Service {
         return null;
     }
 
-    public boolean contactExists(Context context, String numTel) { // Méthode de vérification dans les contacts
-        // number is the phone number
+    public static void sendSms(Context context, String destination, String text) {
+        if (destination == null || destination.trim().isEmpty()) {
+            Log.e(TAG, "sendSms: Destination address is null or empty");
+            return;
+        }
+
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "Cannot send SMS: SEND_SMS permission not granted");
+            Toast.makeText(context, "Erreur: Permission SEND_SMS non accordée", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        try {
+            SmsManager smsManager = SmsManager.getDefault();
+            if (smsManager == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                smsManager = context.getSystemService(SmsManager.class);
+            }
+
+            if (smsManager == null) {
+                Log.e(TAG, "sendSms: Unable to get SmsManager instance");
+                Toast.makeText(context, "Erreur: Impossible d'obtenir SmsManager", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            if (text.length() > 160) {
+                ArrayList<String> parts = smsManager.divideMessage(text);
+                smsManager.sendMultipartTextMessage(destination, null, parts, null, null);
+            } else {
+                smsManager.sendTextMessage(destination, null, text, null, null);
+            }
+
+            Log.d(TAG, "SMS sent to " + destination + ": " + text);
+            Toast.makeText(context, "SMS envoyé à " + destination, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error sending SMS to " + destination, e);
+            Toast.makeText(context, "Erreur envoi SMS: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public static boolean contactExists(Context context, String numTel) { // Méthode de vérification dans les contacts
         Uri lookupUri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(numTel));
 
         String[] mPhoneNumberProjection = {ContactsContract.PhoneLookup._ID, ContactsContract.PhoneLookup.NUMBER};
         Cursor cur = context.getContentResolver().query(lookupUri, mPhoneNumberProjection, null, null, null);
         try {
-            if (cur.moveToFirst()) {
+            if (cur != null && cur.moveToFirst()) {
                 return true;
             }
         } finally {
@@ -308,203 +314,127 @@ public class LMBService extends Service {
         return false;
     }
 
-    public void message(Context context, Intent intent) { // Méthode contenant les différents messages d'envoi possible et leurs retours
-
-        Bundle bundle = intent.getExtras();
-        SmsMessage[] msgs;
-        String strMessage = "";
-        String strMessageBody = "";
-        String format = null;
-        String num = "";
-        String numGroupe = "";
+    public static void processCommand(Context context, String numTel, String strMessageBody) {
         Globals S = Globals.getInstance();
+        String bodyClean = strMessageBody.toLowerCase().replaceAll("\\s", "");
 
-        Log.d(TAG, "Begin message method");
+        if (bodyClean.contains("help")) {
+            sendSms(context, numTel, "Texte d'aide:\n" +
+                    "settel <numero>\n" +
+                    "setgroup <nom>\n" +
+                    "test\n" +
+                    "ouvrir\n" +
+                    "appel");
 
-        if (bundle != null) {
-            format = bundle.getString("format");
-        }
-        // Retrieve the SMS message received.
-        Object[] pdus = (Object[]) bundle.get("pdus");
-        if (pdus != null) {
-            // Check the Android version.
-/*
-            boolean isVersionM =
-                    (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M);
-*/
-            // Fill the msgs array.
-            msgs = new SmsMessage[pdus.length];
-            for (int i = 0; i < msgs.length; i++) {
-                // Check Android version and use appropriate createFromPdu.
-//                if (isVersionM) {
-                // If Android version M or newer:
-                msgs[i] = SmsMessage.createFromPdu((byte[]) pdus[i], format);
-/*
+        } else if (bodyClean.contains("test")) {
+            sendSms(context, numTel, "Test de l'application LMB\n" +
+                    "le numero du portail est le: " + S.getData() + ", le nom du groupe est : " + S.getDatag());
+
+        } else if (bodyClean.contains("ouvrir")) {
+
+            Log.d(TAG, "Ouverture de Intratone");
+
+            PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+            PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
+                    PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                    "MonApplication:WakeLock"
+            );
+            wakeLock.acquire(10000);
+
+            Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage("com.cogelec.notificationpush");
+            if (launchIntent != null) {
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                context.startActivity(launchIntent);
+            } else {
+                Log.e(TAG, "Application Intratone (com.cogelec.notificationpush) non trouvée");
+            }
+
+/*            if ("IDLE".equals(CallListening.getCurrent_state())) {
+                CallOnGoing = true;
+
+                sendSms(context, numTel, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.");
+                String num = "tel:" + S.getData();
+
+                Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
+                appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                    context.startActivity(appel);
                 } else {
-                    // If Android version L or older:
-                    msgs[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
-                }
-*/
-
-                String numTel = msgs[i].getOriginatingAddress();
-
-                // Build the message to show.
-                strMessage += "SMS from " + numTel;
-                strMessageBody = msgs[i].getMessageBody();
-                strMessage += " :" + strMessageBody + "\n";
-
-                // Log and display the SMS message.
-                Log.d(TAG, "onReceive: " + strMessage);
-                Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
-
-                   /* else if (GroupName !=""){
-                        //faire le test d'appartenance
-                        Toast.makeText(context, "C'est bien",Toast.LENGTH_SHORT).show();
-                    }*/
-
-                if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("help")) {
-                    // envoie d'un SMS d'aide sur les differentes commandes possible
-                    SmsManager smsManager = SmsManager.getDefault();
-                    smsManager.sendTextMessage(numTel, null, "Texte d'aide:\n" +
-                            "settel <numero>\n" +
-                            "setgroup <nom>\n" +
-                            "test\n" +
-                            "ouvrir\n" +
-                            "appel", null, null);
-
-                } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("test")) {
-                    // envoie d'un SMS de confirmation de l'ouverture du portail
-                    //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
-                    SmsManager smsManager = SmsManager.getDefault();
-                    smsManager.sendTextMessage(numTel, null, "Test de l'application LMB\n" +
-                            "le numero du portail est le: " + S.getData() + ", le nom du groupe est : " + S.getDatag(), null, null);
-                    //Toast.makeText(getApplicationContext(), "SMS sent.",
-
-
-                } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("ouvrir")) {
-
-                    // Ici, vous pouvez ajouter votre logique pour allumer l'écran
-                    // Utilisez la permission WAKE_LOCK pour allumer l'écran
-                    PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-                    PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
-                            PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
-                            "MonApplication:WakeLock"
-                    );
-                    wakeLock.acquire();
-
-                    // envoie d'un SMS de confirmation de l'ouverture du portail
-                    //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
-                    SmsManager smsManager = SmsManager.getDefault();
-                    //Toast.makeText(getApplicationContext(), "SMS sent.",
-
-                    //if ("IDLE".equals(CallListening.getCurrent_state()) && CallOnGoing == false)
-                    if ("IDLE".equals(CallListening.getCurrent_state()) ) {
-                        CallOnGoing = true;
-
-                        smsManager.sendTextMessage(numTel, null, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
-                        //num = "tel:07000010009796";
-                        num = "tel:" + PortalPhoneNumber;
-
-                        Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
-                        //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
-                        appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-                        // Permission check
-                        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-                            // Vous avez la permission, lancez l'appel téléphonique
-                            context.startActivity(appel);
-                        } else {
-                            // Demandez la permission à l'utilisateur
-                            Log.d(TAG, "L'application n'a pas les droits necessaires pour lancer un appel !");
-                        }
-
-                    } else {
-                        smsManager.sendTextMessage(numTel, null, "Ouverture du portail déjà en cours.", null, null);
-                    }
-
-                } else if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("appel")) {
-
-
-
-                    // Ici, vous pouvez ajouter votre logique pour allumer l'écran
-                    // Utilisez la permission WAKE_LOCK pour allumer l'écran
-                    PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-                    PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
-                            PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
-                            "MonApplication:WakeLock"
-                    );
-                    wakeLock.acquire();
-
-
-
-
-
-
-
-                    // envoie d'un SMS de confirmation de l'ouverture du portail
-                    //PendingIntent pi = PendingIntent.getActivity(this, 0 , new Intent(this, sendmessage.class), 0);
-                    SmsManager smsManager = SmsManager.getDefault();
-                    //Toast.makeText(getApplicationContext(), "SMS sent.",
-
-                    //if (("IDLE".equals(CallListening.getCurrent_state())) && CallOnGoing == false)
-                    if (("IDLE".equals(CallListening.getCurrent_state())) ) {
-                        // Set the global variable here
-                        CallOnGoing = true;
-
-                        smsManager.sendTextMessage(numTel, null, "Appel de votre mobile en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.", null, null);
-                        num = "tel:" + numTel;
-
-                        Log.d(TAG, "Call the SMS emitter :" + num);
-
-                        Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
-                        //Toast.makeText(context, "le numero est:"+numTel,Toast.LENGTH_LONG).show();
-                        appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-                        // Permission check
-                        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-                            // Vous avez la permission, lancez l'appel téléphonique
-                            context.startActivity(appel);
-                        } else {
-                            // Demandez la permission à l'utilisateur
-                            Log.d(TAG, "L'application n'a pas les droits necessaires pour lancer un appel !");
-                        }
-
-
-
-                    } else {
-                        smsManager.sendTextMessage(numTel, null, "Appel de votre mobile déjà en cours.", null, null);
-                    }
+                    Log.d(TAG, "L'application n'a pas les droits necessaires pour lancer un appel !");
                 }
 
+            } else {
+                sendSms(context, numTel, "Ouverture du portail déjà en cours.");
+            }*/
+
+        } else if (bodyClean.contains("appel")) {
+            PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+            PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
+                    PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                    "MonApplication:WakeLock"
+            );
+            wakeLock.acquire();
+
+            if ("IDLE".equals(CallListening.getCurrent_state())) {
+                CallOnGoing = true;
+
+                sendSms(context, numTel, "Appel de votre mobile en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.");
+                String num = "tel:" + numTel;
+
+                Log.d(TAG, "Call the SMS emitter :" + num);
+
+                Intent appel = new Intent(Intent.ACTION_CALL, Uri.parse(num));
+                appel.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                    context.startActivity(appel);
+                } else {
+                    Log.d(TAG, "L'application n'a pas les droits necessaires pour lancer un appel !");
+                }
+
+            } else {
+                sendSms(context, numTel, "Appel de votre mobile déjà en cours.");
             }
         }
+    }
 
+    public void message(Context context, Intent intent) { // Méthode contenant les différents messages d'envoi possible et leurs retours
+        Log.d(TAG, "Begin message method");
+        SmsMessage[] msgs = Telephony.Sms.Intents.getMessagesFromIntent(intent);
+        if (msgs != null && msgs.length > 0) {
+            for (int i = 0; i < msgs.length; i++) {
+                if (msgs[i] == null) continue;
+                String numTel = msgs[i].getOriginatingAddress();
+                String strMessageBody = msgs[i].getMessageBody();
+                if (numTel != null && strMessageBody != null) {
+                    processCommand(context, numTel, strMessageBody);
+                }
+            }
+        }
         Log.d(TAG, "End message method");
-
     }
 
 
-    public boolean getGroupsTitle(String numtel, Context context) { // Méthode de vérification dans les groupes
+    public static boolean getGroupsTitle(String numtel, Context context) { // Méthode de vérification dans les groupes
 
         List<String> groupsTitle = new ArrayList<>();
         boolean present = false;
         String contactId = null;
         Globals g = Globals.getInstance();
 
-
-
-        Cursor cursorContactId  = context.getContentResolver().query(
-                ContactsContract.Data.CONTENT_URI,
-                new String[]{ContactsContract.Data.CONTACT_ID},
-                String.format("%s=? AND %s=?", ContactsContract.Data.DATA4, ContactsContract.Data.MIMETYPE),
-                new String[]{numtel, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE},
-                null);
-
-        while (cursorContactId.moveToNext()) {
-            contactId = cursorContactId.getString(0);
+        Uri lookupUri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(numtel));
+        String[] projection = {ContactsContract.PhoneLookup._ID};
+        Cursor cursorContactId = context.getContentResolver().query(lookupUri, projection, null, null, null);
+        if (cursorContactId != null) {
+            try {
+                if (cursorContactId.moveToFirst()) {
+                    contactId = cursorContactId.getString(0);
+                }
+            } finally {
+                cursorContactId.close();
+            }
         }
-        cursorContactId.close();
-
 
         if (contactId == null)
             return present;
@@ -518,61 +448,57 @@ public class LMBService extends Service {
                 new String[]{contactId, ContactsContract.CommonDataKinds.GroupMembership.CONTENT_ITEM_TYPE},
                 null);
 
-        while (cursorGroupId.moveToNext()) {
-            String groupId = cursorGroupId.getString(0);
-            groupIdList.add(groupId);
+        if (cursorGroupId != null) {
+            while (cursorGroupId.moveToNext()) {
+                String groupId = cursorGroupId.getString(0);
+                groupIdList.add(groupId);
+            }
+            cursorGroupId.close();
         }
-        cursorGroupId.close();
 
-        Cursor cursorGroupTitle = getContentResolver().query(
+        if (groupIdList.isEmpty()) {
+            return present;
+        }
+
+        Cursor cursorGroupTitle = context.getContentResolver().query(
                 ContactsContract.Groups.CONTENT_URI, new String[]{ContactsContract.Groups.TITLE},
                 ContactsContract.Groups._ID + " IN (" + TextUtils.join(",", groupIdList) + ")",
                 null,
                 null);
 
-        while (cursorGroupTitle.moveToNext()) {
-            String groupName = cursorGroupTitle.getString(0);
-            groupsTitle.add(groupName);
-            if (g.getDatag().equals(groupName)){
-                present = true;
-                return present;
+        if (cursorGroupTitle != null) {
+            while (cursorGroupTitle.moveToNext()) {
+                String groupName = cursorGroupTitle.getString(0);
+                groupsTitle.add(groupName);
+                if (g.getDatag() != null && g.getDatag().equals(groupName)){
+                    present = true;
+                    cursorGroupTitle.close();
+                    return present;
+                }
             }
+            cursorGroupTitle.close();
         }
-        cursorGroupTitle.close();
         return present;
     }
 
-    public boolean admin(String numtel, Context context) { // Méthode de vérification dans le groupe admin
+    public static boolean admin(String numtel, Context context) { // Méthode de vérification dans le groupe admin
 
         List<String> groupsTitle = new ArrayList<>();
         boolean present = false;
         String contactId = null;
 
-        String output;
-       /* switch (numtel.length()) {
-            case 10:
-                output = String.format("(%s) %s-%s", numtel.substring(0,3), numtel.substring(3,6), numtel.substring(6,10));
-                break;
-            case 12:
-                output = String.format("%s0%s %s %s %s %s", numtel.substring(0,3), numtel.substring(3,4), numtel.substring(4,6), numtel.substring(6,8), numtel.substring(8,10), numtel.substring(10,12));
-                output = output.replace("+33", "");
-                break;
-            default:
-                return present;
-        }*/
-
-        Cursor cursorContactId  = context.getContentResolver().query(
-                ContactsContract.Data.CONTENT_URI,
-                new String[]{ContactsContract.Data.CONTACT_ID},
-                String.format("%s=? AND %s=?", ContactsContract.Data.DATA4, ContactsContract.Data.MIMETYPE),
-                new String[]{numtel, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE},
-                null);
-
-        while (cursorContactId.moveToNext()) {
-            contactId = cursorContactId.getString(0);
+        Uri lookupUri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(numtel));
+        String[] projection = {ContactsContract.PhoneLookup._ID};
+        Cursor cursorContactId = context.getContentResolver().query(lookupUri, projection, null, null, null);
+        if (cursorContactId != null) {
+            try {
+                if (cursorContactId.moveToFirst()) {
+                    contactId = cursorContactId.getString(0);
+                }
+            } finally {
+                cursorContactId.close();
+            }
         }
-        cursorContactId.close();
-
 
         if (contactId == null)
             return present;
@@ -586,27 +512,36 @@ public class LMBService extends Service {
                 new String[]{contactId, ContactsContract.CommonDataKinds.GroupMembership.CONTENT_ITEM_TYPE},
                 null);
 
-        while (cursorGroupId.moveToNext()) {
-            String groupId = cursorGroupId.getString(0);
-            groupIdList.add(groupId);
+        if (cursorGroupId != null) {
+            while (cursorGroupId.moveToNext()) {
+                String groupId = cursorGroupId.getString(0);
+                groupIdList.add(groupId);
+            }
+            cursorGroupId.close();
         }
-        cursorGroupId.close();
 
-        Cursor cursorGroupTitle = getContentResolver().query(
+        if (groupIdList.isEmpty()) {
+            return present;
+        }
+
+        Cursor cursorGroupTitle = context.getContentResolver().query(
                 ContactsContract.Groups.CONTENT_URI, new String[]{ContactsContract.Groups.TITLE},
                 ContactsContract.Groups._ID + " IN (" + TextUtils.join(",", groupIdList) + ")",
                 null,
                 null);
 
-        while (cursorGroupTitle.moveToNext()) {
-            String groupName = cursorGroupTitle.getString(0);
-            groupsTitle.add(groupName);
-            if (groupName.equals("LMB_Bureau")){
-                present = true;
-                return present;
+        if (cursorGroupTitle != null) {
+            while (cursorGroupTitle.moveToNext()) {
+                String groupName = cursorGroupTitle.getString(0);
+                groupsTitle.add(groupName);
+                if ("LMB_Bureau".equals(groupName)){
+                    present = true;
+                    cursorGroupTitle.close();
+                    return present;
+                }
             }
+            cursorGroupTitle.close();
         }
-        cursorGroupTitle.close();
         return present;
     }
 }
