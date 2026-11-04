@@ -55,6 +55,20 @@ public class LMB_Application extends Activity implements View.OnClickListener{
         Group.setText(" " + a + " ");
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (LMBAccessibilityService.getInstance() == null) {
+            android.widget.Toast.makeText(this, "Veuillez activer l'accessibilité pour LMB Application", android.widget.Toast.LENGTH_LONG).show();
+            try {
+                Intent intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                startActivity(intent);
+            } catch (Exception e) {
+                Log.e(TAG, "Erreur ouverture écran accessibilité", e);
+            }
+        }
+    }
+
     private void checkAndRequestPermissions() {
         String[] permissions = new String[]{
                 Manifest.permission.RECEIVE_SMS,

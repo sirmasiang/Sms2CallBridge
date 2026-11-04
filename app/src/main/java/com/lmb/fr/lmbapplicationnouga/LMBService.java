@@ -16,8 +16,11 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.provider.ContactsContract;
+import android.provider.Settings;
 import android.provider.Telephony;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
@@ -345,6 +348,31 @@ public class LMBService extends Service {
             if (launchIntent != null) {
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 context.startActivity(launchIntent);
+
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        LMBAccessibilityService accessibilityService = LMBAccessibilityService.getInstance();
+                        if (accessibilityService != null) {
+     /*                       // push the button "voir les portes"
+                            accessibilityService.performTapGesture(360f, 660f);*/
+                            // push the button "Portailrue St Exupery"
+                            accessibilityService.performTapGesture(350f, 510f);
+                            Log.d(TAG, "performTapGesture exécuté aux coordonnées (360, 660)");
+                        } else {
+                            Log.e(TAG, "LMBAccessibilityService non connecté.");
+                            Toast.makeText(context, "Veuillez activer l'accessibilité pour LMB Application", Toast.LENGTH_LONG).show();
+                            try {
+                                Intent settingsIntent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                                settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                context.startActivity(settingsIntent);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Impossible d'ouvrir les paramètres d'accessibilité", e);
+                            }
+                        }
+                    }
+                }, 1000);
+
             } else {
                 Log.e(TAG, "Application Intratone (com.cogelec.notificationpush) non trouvée");
             }
