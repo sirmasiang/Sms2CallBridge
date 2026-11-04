@@ -371,7 +371,7 @@ public class LMBService extends Service {
                             }
                         }
                     }
-                }, 1000);
+                }, 5000);
 
             } else {
                 Log.e(TAG, "Application Intratone (com.cogelec.notificationpush) non trouvée");
