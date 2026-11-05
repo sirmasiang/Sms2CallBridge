@@ -52,81 +52,6 @@ public class LMBService extends Service {
         this.CallOnGoing = callOnGoing;
     }
 
-    private final BroadcastReceiver LMB_SMS_Receiver = new BroadcastReceiver() {
-        private static final String TAG = "LmbSmsReceiver";
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            SmsMessage[] msgs = Telephony.Sms.Intents.getMessagesFromIntent(intent);
-            String strMessage = "";
-            String strMessageBody = "";
-            String num = "";
-            String numGroupe = "";
-            Globals S = Globals.getInstance();
-
-            Log.d(TAG, "LMBService - SMS received");
-
-            if (msgs != null && msgs.length > 0) {
-                for (int i = 0; i < msgs.length; i++) {
-                    if (msgs[i] == null) continue;
-
-                    String numTel = msgs[i].getOriginatingAddress();
-                    if (numTel == null) continue;
-
-                    strMessageBody = msgs[i].getMessageBody();
-                    if (strMessageBody == null) continue;
-
-                    strMessage = "SMS from " + numTel + " :" + strMessageBody + "\n";
-
-                    Log.d(TAG, "onReceive: " + strMessage);
-                    Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
-
-                    if (strMessageBody.toLowerCase().contains("settel")) { //Vérification si c'est une commande admin
-                        if (admin(numTel, getApplicationContext())) {// Vérification d'appartenance au groupe Admin
-                            num = strMessageBody.toLowerCase().substring(8);
-                            PortalPhoneNumber = num;
-                            S.setData(num);
-                            sendSms(context, numTel, "Le nouveau numero du portail est le: " + num);
-                        } else {
-                            sendSms(context, numTel, "Vous n'êtes pas autorisé(e) à utiliser cette commande.");
-                        }
-                    }
-
-                    if (strMessageBody.toLowerCase().contains("setgroup")) { // Vérification si c'est une commande admin
-                        if (admin(numTel, getApplicationContext())) { // Vérification d'appartenance au groupe Admin
-                            numGroupe = strMessageBody.substring(9);
-                            GroupName = numGroupe;
-                            S.setDatag(numGroupe);
-                            sendSms(context, numTel, "Le nouveau nom du groupe est le: " + numGroupe);
-                        } else {
-                            sendSms(context, numTel, "Vous n'êtes pas autorisé(e) à utiliser cette commande.");
-                        }
-                    }
-
-                    if (S.getDatag() == null || S.getDatag().isEmpty()) { // Vérification si la valeur du groupe est nulle ou non
-                        processCommand(context, numTel, strMessageBody);
-                    }
-                    else {
-                        if (contactExists(context, numTel)) { // Si non vérification dans les contacts du téléphone
-                            if (getGroupsTitle(numTel, getApplicationContext())) {// Vérification de l'appartenance dans le groupe renseigné dans l'application
-                                processCommand(context, numTel, strMessageBody);
-                            } else {
-                                Log.d(TAG, "Debug avant");
-                                sendSms(context, numTel, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.");
-                                Log.d(TAG, "Debug après");
-                            }
-                        } else {
-                            sendSms(context, numTel, "Vous n'êtes pas adhérent du club. Veuillez contacter un membre du bureau pour plus d'informations.");
-                        }
-                    }
-                }
-            }
-
-            Log.d(TAG,"LMBService - SMS treated");
-
-        }
-    };
-
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence channelName = "My Notification Channel";
@@ -146,10 +71,7 @@ public class LMBService extends Service {
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
-        IntentFilter filter = new IntentFilter();
-        filter.addAction("android.provider.Telephony.SMS_RECEIVED");
         Log.d(TAG,"LMBService - onCreate");
-        registerReceiver(LMB_SMS_Receiver, filter);
     }
 
     /**
@@ -232,7 +154,6 @@ public class LMBService extends Service {
         Toast.makeText(this, "LMB service stopped", Toast.LENGTH_LONG).show();
         Log.d(TAG,"LMBService - onDestroy");
 
-        unregisterReceiver(LMB_SMS_Receiver);
         super.onDestroy();
 
         // To stop the automatic service start, comment following two lines, build and flash.
