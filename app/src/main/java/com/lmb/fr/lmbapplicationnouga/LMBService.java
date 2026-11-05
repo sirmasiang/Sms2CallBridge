@@ -328,7 +328,7 @@ public class LMBService extends Service {
             sendSms(context, numTel, "Test de l'application LMB\n" +
                     "le numero du portail est le: " + S.getData() + ", le nom du groupe est : " + S.getDatag());
 
-            Log.d(TAG, "test avec Intratone");
+            Log.d(TAG, "test avec Intratone -> appuis sur voir les portes");
 
             PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
             PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
@@ -394,7 +394,7 @@ public class LMBService extends Service {
                             accessibilityService.performTapGesture(360f, 660f);*/
                             // push the button "Portailrue St Exupery"
                             accessibilityService.performTapGesture(350f, 510f);
-                            Log.d(TAG, "performTapGesture exécuté aux coordonnées (360, 660)");
+                            Log.d(TAG, "performTapGesture exécuté aux coordonnées (350, 510)");
                         } else {
                             Log.e(TAG, "LMBAccessibilityService non connecté.");
                             Toast.makeText(context, "Veuillez activer l'accessibilité pour LMB Application", Toast.LENGTH_LONG).show();
