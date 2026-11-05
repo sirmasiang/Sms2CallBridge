@@ -81,15 +81,7 @@ public class LMBService extends Service {
                     Log.d(TAG, "onReceive: " + strMessage);
                     Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
 
-                    if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("help")) {
-                        sendSms(context, numTel, "Texte d'aide:\n" +
-                                "settel <numero>\n" +
-                                "setgroup <nom>\n" +
-                                "test\n" +
-                                "ouvrir\n" +
-                                "appel");
-                    }
-                    else if (strMessageBody.toLowerCase().contains("settel")) { //Vérification si c'est une commande admin
+                    if (strMessageBody.toLowerCase().contains("settel")) { //Vérification si c'est une commande admin
                         if (admin(numTel, getApplicationContext())) {// Vérification d'appartenance au groupe Admin
                             num = strMessageBody.toLowerCase().substring(8);
                             PortalPhoneNumber = num;
@@ -99,7 +91,8 @@ public class LMBService extends Service {
                             sendSms(context, numTel, "Vous n'êtes pas autorisé(e) à utiliser cette commande.");
                         }
                     }
-                    else if (strMessageBody.toLowerCase().contains("setgroup")) { // Vérification si c'est une commande admin
+
+                    if (strMessageBody.toLowerCase().contains("setgroup")) { // Vérification si c'est une commande admin
                         if (admin(numTel, getApplicationContext())) { // Vérification d'appartenance au groupe Admin
                             numGroupe = strMessageBody.substring(9);
                             GroupName = numGroupe;
@@ -109,7 +102,8 @@ public class LMBService extends Service {
                             sendSms(context, numTel, "Vous n'êtes pas autorisé(e) à utiliser cette commande.");
                         }
                     }
-                    else if (S.getDatag() == null || S.getDatag().isEmpty()) { // Vérification si la valeur du groupe est nulle ou non
+
+                    if (S.getDatag() == null || S.getDatag().isEmpty()) { // Vérification si la valeur du groupe est nulle ou non
                         processCommand(context, numTel, strMessageBody);
                     }
                     else {
@@ -322,6 +316,7 @@ public class LMBService extends Service {
         String bodyClean = strMessageBody.toLowerCase().replaceAll("\\s", "");
 
         if (bodyClean.contains("help")) {
+            Log.d(TAG, "help dans processCommand");
             sendSms(context, numTel, "Texte d'aide:\n" +
                     "settel <numero>\n" +
                     "setgroup <nom>\n" +
@@ -332,6 +327,47 @@ public class LMBService extends Service {
         } else if (bodyClean.contains("test")) {
             sendSms(context, numTel, "Test de l'application LMB\n" +
                     "le numero du portail est le: " + S.getData() + ", le nom du groupe est : " + S.getDatag());
+
+            Log.d(TAG, "test avec Intratone");
+
+            PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+            PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
+                    PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                    "MonApplication:WakeLock"
+            );
+            wakeLock.acquire(10000);
+
+            Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage("com.cogelec.notificationpush");
+            if (launchIntent != null) {
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                context.startActivity(launchIntent);
+
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        LMBAccessibilityService accessibilityService = LMBAccessibilityService.getInstance();
+                        if (accessibilityService != null) {
+     /*                       // push the button "voir les portes"
+                            accessibilityService.performTapGesture(360f, 660f);*/
+                            // push the button "Portailrue St Exupery"
+                            accessibilityService.performTapGesture(360f, 660f);
+                            Log.d(TAG, "performTapGesture exécuté aux coordonnées (360, 660)");
+                        } else {
+                            Log.e(TAG, "LMBAccessibilityService non connecté.");
+                            Toast.makeText(context, "Veuillez activer l'accessibilité pour LMB Application", Toast.LENGTH_LONG).show();
+                            try {
+                                Intent settingsIntent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                                settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                context.startActivity(settingsIntent);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Impossible d'ouvrir les paramètres d'accessibilité", e);
+                            }
+                        }
+                    }
+                }, 5000);
+
+            }
+
 
         } else if (bodyClean.contains("ouvrir")) {
 
