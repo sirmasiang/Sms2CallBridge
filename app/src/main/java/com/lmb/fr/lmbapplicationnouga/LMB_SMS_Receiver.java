@@ -27,14 +27,7 @@ public class LMB_SMS_Receiver extends BroadcastReceiver {
                 Log.d(TAG, "SMS received from " + numTel + " : " + strMessageBody);
                 Toast.makeText(context, "SMS de " + numTel + " : " + strMessageBody, Toast.LENGTH_LONG).show();
 
-                if (strMessageBody.toLowerCase().replaceAll("\\s", "").contains("help")) {
-                    LMBService.sendSms(context, numTel, "Texte d'aide:\n" +
-                            "settel <numero>\n" +
-                            "setgroup <nom>\n" +
-                            "test\n" +
-                            "ouvrir\n" +
-                            "appel");
-                } else if (strMessageBody.toLowerCase().contains("settel")) {
+                if (strMessageBody.toLowerCase().contains("settel")) {
                     if (LMBService.admin(numTel, context)) {
                         String num = strMessageBody.toLowerCase().substring(8);
                         S.setData(num);
