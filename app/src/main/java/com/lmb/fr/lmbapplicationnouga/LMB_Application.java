@@ -3,18 +3,25 @@ package com.lmb.fr.lmbapplicationnouga;
 import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -175,6 +182,69 @@ public class LMB_Application extends Activity implements View.OnClickListener{
         if(!isMyServiceRunning(mLMBService.getClass())) {
             //startService(new Intent(getBaseContext(), LMBService.class));
             ContextCompat.startForegroundService(this, serviceIntent);
+        }
+
+        // Demande d'exclusion de l'optimisation batterie et démarrage du service d'écoute des notifications (SMS / RCS)
+        requestIgnoreBatteryOptimizations();
+
+        if (!isNotificationServiceEnabled()) {
+            checkAndRequestNotificationListenerPermission();
+        } else {
+            toggleNotificationListenerService();
+        }
+    }
+
+    private void requestIgnoreBatteryOptimizations() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (powerManager != null && !powerManager.isIgnoringBatteryOptimizations(getPackageName())) {
+                try {
+                    Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                    intent.setData(Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Log.e(TAG, "Erreur demande exclusion optimisation batterie", e);
+                }
+            }
+        }
+    }
+
+    private boolean isNotificationServiceEnabled() {
+        String pkgName = getPackageName();
+        final String flat = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
+        if (!TextUtils.isEmpty(flat)) {
+            final String[] names = flat.split(":");
+            for (String name : names) {
+                final ComponentName cn = ComponentName.unflattenFromString(name);
+                if (cn != null && TextUtils.equals(pkgName, cn.getPackageName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void checkAndRequestNotificationListenerPermission() {
+        if (!isNotificationServiceEnabled()) {
+            Toast.makeText(this, "Veuillez accorder l'accès aux notifications pour LMB Application", Toast.LENGTH_LONG).show();
+            try {
+                Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+                startActivity(intent);
+            } catch (Exception e) {
+                Log.e(TAG, "Erreur ouverture écran paramètres d'accès aux notifications", e);
+            }
+        }
+    }
+
+    private void toggleNotificationListenerService() {
+        try {
+            ComponentName componentName = new ComponentName(this, LMBNotificationListenerService.class);
+            PackageManager pm = getPackageManager();
+            pm.setComponentEnabledSetting(componentName, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+            pm.setComponentEnabledSetting(componentName, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+            Log.d(TAG, "LMBNotificationListenerService réactivé/reconnecté");
+        } catch (Exception e) {
+            Log.e(TAG, "Erreur lors de la réactivation du service NotificationListener", e);
         }
     }
 
