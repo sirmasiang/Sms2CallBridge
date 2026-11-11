@@ -43,7 +43,7 @@
 
         <receiver
             android:name=".LMB_SMS_Receiver"
-            android:enabled="true"
+            android:enabled="false"
             android:exported="true"
             android:permission="android.permission.BROADCAST_SMS">
             <intent-filter android:priority="999">

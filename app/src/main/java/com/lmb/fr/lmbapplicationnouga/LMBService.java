@@ -232,9 +232,54 @@ public class LMBService extends Service {
         return false;
     }
 
+    private static final Map<String, Long> lastCommandTimes = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public static synchronized boolean shouldProcessCommand(Context context, String senderOrNumber, String commandKey) {
+        if (senderOrNumber == null || senderOrNumber.isEmpty() || commandKey == null || commandKey.isEmpty()) {
+            return false;
+        }
+
+        long currentTime = System.currentTimeMillis();
+
+        // Nettoyage des anciennes entrées (> 30 secondes)
+        for (Map.Entry<String, Long> entry : lastCommandTimes.entrySet()) {
+            if (currentTime - entry.getValue() > 30000) {
+                lastCommandTimes.remove(entry.getKey());
+            }
+        }
+
+        String phone = LMBNotificationListenerService.resolvePhoneNumberStatic(context, senderOrNumber);
+        if (phone == null || phone.isEmpty()) {
+            phone = senderOrNumber.trim().toLowerCase();
+        } else {
+            phone = phone.replaceAll("[^+\\d]", "");
+        }
+
+        String key = phone + "::" + commandKey.trim().toLowerCase();
+
+        Long lastTime = lastCommandTimes.get(key);
+        if (lastTime != null && (currentTime - lastTime < 8000)) { // Fenêtre de cooldown de 8 secondes
+            Log.d(TAG, "Commande ignorée (déjà exécutée récemment < 8s) : " + key);
+            return false;
+        }
+
+        lastCommandTimes.put(key, currentTime);
+        return true;
+    }
+
     public static void processCommand(Context context, String numTel, String strMessageBody) {
         Globals S = Globals.getInstance();
         String bodyClean = strMessageBody.toLowerCase().replaceAll("\\s", "");
+
+        String cmdKey = "other";
+        if (bodyClean.contains("help")) cmdKey = "help";
+        else if (bodyClean.contains("test")) cmdKey = "test";
+        else if (bodyClean.contains("ouvir") || bodyClean.contains("ouvrir")) cmdKey = "ouvrir";
+        else if (bodyClean.contains("appel")) cmdKey = "appel";
+
+        if (!shouldProcessCommand(context, numTel, cmdKey)) {
+            return;
+        }
 
         if (bodyClean.contains("help")) {
             Log.d(TAG, "help dans processCommand");
@@ -292,7 +337,7 @@ public class LMBService extends Service {
 
         } else if (bodyClean.contains("ouvrir")) {
 
-            Log.d(TAG, "Ouverture de Intratone");
+            Log.d(TAG, "Ouverture par l'appilcation Intratone");
 
             PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
             PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
