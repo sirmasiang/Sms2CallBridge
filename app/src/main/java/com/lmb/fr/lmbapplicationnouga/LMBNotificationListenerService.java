@@ -80,7 +80,7 @@ public class LMBNotificationListenerService extends NotificationListenerService 
                 new Handler(Looper.getMainLooper()).post(() ->
                     Toast.makeText(getApplicationContext(), "ouverture du portail en cours", Toast.LENGTH_LONG).show()
                 );
-                sendReply(notification, sender, "Ouverture du portail en cours");
+                sendReply(notification, sender, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.");
 
                 // Ouverture du portail via l'application Intratone
                 Log.d(TAG, "Ouverture par l'application Intratone");
@@ -103,9 +103,9 @@ public class LMBNotificationListenerService extends NotificationListenerService 
                         LMBAccessibilityService accessibilityService = LMBAccessibilityService.getInstance();
                         if (accessibilityService != null) {
                             // push the button "voir les portes"
-                            accessibilityService.performTapGesture(360f, 660f);
+                            //accessibilityService.performTapGesture(360f, 660f);
                             // push the button "Portailrue St Exupery"
-                            //accessibilityService.performTapGesture(350f, 510f);
+                            accessibilityService.performTapGesture(350f, 510f);
                             Log.d(TAG, "performTapGesture exécuté aux coordonnées (350, 510)");
                         } else {
                             Log.e(TAG, "LMBAccessibilityService non connecté.");
