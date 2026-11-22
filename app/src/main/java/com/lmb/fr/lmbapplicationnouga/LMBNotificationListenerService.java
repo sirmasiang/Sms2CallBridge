@@ -6,9 +6,11 @@ import android.app.RemoteInput;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Parcelable;
 import android.os.PowerManager;
 import android.provider.ContactsContract;
 import android.provider.Settings;
@@ -16,6 +18,8 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
 import android.widget.Toast;
+
+import java.util.ArrayList;
 
 public class LMBNotificationListenerService extends NotificationListenerService {
     private static final String TAG = "LMBNotifListener";
@@ -162,13 +166,60 @@ public class LMBNotificationListenerService extends NotificationListenerService 
             return;
         }
 
-        String targetPhone = resolvePhoneNumberStatic(getApplicationContext(), sender);
+        String targetPhone = extractPhoneNumberFromNotification(notification, sender);
         if (targetPhone != null && !targetPhone.isEmpty()) {
             Log.d(TAG, "Repli sur l'envoi par SMS vers : " + targetPhone);
             LMBService.sendSms(getApplicationContext(), targetPhone, replyText);
         } else {
             Log.e(TAG, "Impossible d'obtenir le numéro de téléphone pour l'émetteur : " + sender);
         }
+    }
+
+    private String extractPhoneNumberFromNotification(Notification notification, String defaultSender) {
+        if (notification != null && notification.extras != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            Bundle extras = notification.extras;
+
+            android.app.Person person = extras.getParcelable(Notification.EXTRA_MESSAGING_PERSON);
+            if (person != null && person.getUri() != null && person.getUri().startsWith("tel:")) {
+                String phone = person.getUri().substring(4).replaceAll("[^+\\d]", "");
+                if (!phone.isEmpty()) {
+                    Log.d(TAG, "Numéro extrait de EXTRA_MESSAGING_PERSON : " + phone);
+                    return phone;
+                }
+            }
+
+            ArrayList<android.app.Person> people = extras.getParcelableArrayList(Notification.EXTRA_PEOPLE_LIST);
+            if (people != null) {
+                for (android.app.Person p : people) {
+                    if (p != null && p.getUri() != null && p.getUri().startsWith("tel:")) {
+                        String phone = p.getUri().substring(4).replaceAll("[^+\\d]", "");
+                        if (!phone.isEmpty()) {
+                            Log.d(TAG, "Numéro extrait de EXTRA_PEOPLE_LIST : " + phone);
+                            return phone;
+                        }
+                    }
+                }
+            }
+
+            Parcelable[] messages = extras.getParcelableArray(Notification.EXTRA_MESSAGES);
+            if (messages != null && messages.length > 0) {
+                for (int i = messages.length - 1; i >= 0; i--) {
+                    if (messages[i] instanceof Bundle) {
+                        Bundle msgBundle = (Bundle) messages[i];
+                        android.app.Person msgPerson = msgBundle.getParcelable("sender_person");
+                        if (msgPerson != null && msgPerson.getUri() != null && msgPerson.getUri().startsWith("tel:")) {
+                            String phone = msgPerson.getUri().substring(4).replaceAll("[^+\\d]", "");
+                            if (!phone.isEmpty()) {
+                                Log.d(TAG, "Numéro extrait de EXTRA_MESSAGES : " + phone);
+                                return phone;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return resolvePhoneNumberStatic(getApplicationContext(), defaultSender);
     }
 
     private boolean replyViaNotification(Notification notification, String replyText) {
@@ -213,22 +264,32 @@ public class LMBNotificationListenerService extends NotificationListenerService 
         }
 
         try {
+            // Préférer un numéro de type MOBILE avec correspondance exacte du nom
             Cursor cursor = context.getContentResolver().query(
                     ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                    new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER},
-                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " = ? OR " +
-                            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " LIKE ?",
-                    new String[]{sender, "%" + sender + "%"},
-                    null
+                    new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER, ContactsContract.CommonDataKinds.Phone.TYPE},
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " = ?",
+                    new String[]{sender},
+                    ContactsContract.CommonDataKinds.Phone.TYPE + " ASC"
             );
             if (cursor != null) {
                 try {
-                    if (cursor.moveToFirst()) {
-                        int index = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
-                        if (index != -1) {
-                            return cursor.getString(index);
+                    String mobileNumber = null;
+                    String firstNumber = null;
+                    while (cursor.moveToNext()) {
+                        int numIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+                        int typeIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE);
+                        if (numIndex != -1) {
+                            String num = cursor.getString(numIndex);
+                            if (firstNumber == null) firstNumber = num;
+                            if (typeIndex != -1 && cursor.getInt(typeIndex) == ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE) {
+                                mobileNumber = num;
+                                break;
+                            }
                         }
                     }
+                    if (mobileNumber != null) return mobileNumber.replaceAll("[^+\\d]", "");
+                    if (firstNumber != null) return firstNumber.replaceAll("[^+\\d]", "");
                 } finally {
                     cursor.close();
                 }
