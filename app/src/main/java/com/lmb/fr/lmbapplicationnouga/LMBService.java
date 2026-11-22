@@ -267,7 +267,7 @@ public class LMBService extends Service {
         return true;
     }
 
-    public static void processCommand(Context context, String numTel, String strMessageBody) {
+/*    public static void processCommand(Context context, String numTel, String strMessageBody) {
         Globals S = Globals.getInstance();
         String bodyClean = strMessageBody.toLowerCase().replaceAll("\\s", "");
 
@@ -313,8 +313,8 @@ public class LMBService extends Service {
                     public void run() {
                         LMBAccessibilityService accessibilityService = LMBAccessibilityService.getInstance();
                         if (accessibilityService != null) {
-     /*                       // push the button "voir les portes"
-                            accessibilityService.performTapGesture(360f, 660f);*/
+     *//*                       // push the button "voir les portes"
+                            accessibilityService.performTapGesture(360f, 660f);*//*
                             // push the button "Portailrue St Exupery"
                             accessibilityService.performTapGesture(360f, 660f);
                             Log.d(TAG, "performTapGesture exécuté aux coordonnées (360, 660)");
@@ -356,8 +356,8 @@ public class LMBService extends Service {
                     public void run() {
                         LMBAccessibilityService accessibilityService = LMBAccessibilityService.getInstance();
                         if (accessibilityService != null) {
-     /*                       // push the button "voir les portes"
-                            accessibilityService.performTapGesture(360f, 660f);*/
+     *//*                       // push the button "voir les portes"
+                            accessibilityService.performTapGesture(360f, 660f);*//*
                             // push the button "Portailrue St Exupery"
                             accessibilityService.performTapGesture(350f, 510f);
                             Log.d(TAG, "performTapGesture exécuté aux coordonnées (350, 510)");
@@ -379,7 +379,7 @@ public class LMBService extends Service {
                 Log.e(TAG, "Application Intratone (com.cogelec.notificationpush) non trouvée");
             }
 
-/*            if ("IDLE".equals(CallListening.getCurrent_state())) {
+*//*            if ("IDLE".equals(CallListening.getCurrent_state())) {
                 CallOnGoing = true;
 
                 sendSms(context, numTel, "Ouverture du portail en cours. Si rien ne se passe, veillez ré-essayer dans 30 secondes.");
@@ -396,7 +396,7 @@ public class LMBService extends Service {
 
             } else {
                 sendSms(context, numTel, "Ouverture du portail déjà en cours.");
-            }*/
+            }*//*
 
         } else if (bodyClean.contains("appel")) {
             PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
@@ -427,9 +427,9 @@ public class LMBService extends Service {
                 sendSms(context, numTel, "Appel de votre mobile déjà en cours.");
             }
         }
-    }
+    }*/
 
-    public void message(Context context, Intent intent) { // Méthode contenant les différents messages d'envoi possible et leurs retours
+/*    public void message(Context context, Intent intent) { // Méthode contenant les différents messages d'envoi possible et leurs retours
         Log.d(TAG, "Begin message method");
         SmsMessage[] msgs = Telephony.Sms.Intents.getMessagesFromIntent(intent);
         if (msgs != null && msgs.length > 0) {
@@ -443,7 +443,7 @@ public class LMBService extends Service {
             }
         }
         Log.d(TAG, "End message method");
-    }
+    }*/
 
 
     public static boolean getGroupsTitle(String numtel, Context context) { // Méthode de vérification dans les groupes
