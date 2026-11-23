@@ -97,21 +97,15 @@ public class LMB_Application extends Activity implements View.OnClickListener{
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
-            /*case R.id.messages :
-                messages = new Intent (this, Messages.class);
-                this.startActivity(messages);
-                break;*/
-            case R.id.Sauvegarder :
-                save();
-                save = new Intent (this,LMB_Application.class);
-                this.startActivity(save);
-                break;
-            case R.id.Refresh :
-                refresh();
-                refresh = new Intent (this,LMB_Application.class);
-                this.startActivity(refresh);
-                break;
+        int id = v.getId();
+        if (id == R.id.Sauvegarder) {
+            save();
+            save = new Intent(this, LMB_Application.class);
+            this.startActivity(save);
+        } else if (id == R.id.Refresh) {
+            refresh();
+            refresh = new Intent(this, LMB_Application.class);
+            this.startActivity(refresh);
         }
     }
 
